@@ -4,8 +4,8 @@ import React, { Component } from 'react';
 
 import Wrapper from './Wrapper';
 import Infos from './Infos';
-import PauseIcon from './PauseIcon';
-import PlayIcon from './PlayIcon';
+// import PauseIcon from './PauseIcon';
+// import PlayIcon from './PlayIcon';
 import ProgressionBar from './ProgressionBar';
 
 export default class TvShow extends Component {
@@ -34,13 +34,17 @@ export default class TvShow extends Component {
       }
     });
     ipcRenderer.send('watch-progression');
+
+    console.log('this.props.video', this.props.video)
   }
 
   render() {
+    const twoDigits = nb => ((`0${nb}`).slice(-2));
     return (
       <Wrapper bgImage={this.props.video && this.props.video.images && this.props.video.images.background}>
         <Infos>
-          <h2>{ this.props.video.title }</h2>
+          <h2>{ this.props.video.title } { this.props.video.episode.season }x{ twoDigits(this.props.video.episode.number) }</h2>
+          <h3>{ this.props.video.episode.title }</h3>
           {/* <PlayIcon />
           <PauseIcon /> */}
         </Infos>

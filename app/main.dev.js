@@ -17,9 +17,7 @@ import MenuBuilder from './menu';
 import Database, { checkIfValidProviders } from './lib/database';
 import { watchconf, isConfigured } from './lib/listeners/configuration';
 import { configureVlc, listenVlc } from './lib/listeners/vlc';
-// import { init } from './lib/listeners/browser';
-//
-// init();
+
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -109,7 +107,7 @@ function initializeTracking() {
 }
 
 function setApplicationMenu() {
-  const iconPath = path.join(__dirname, 'lib', 'menu', 'flagTemplate.png');
+  const iconPath = path.join(__dirname, 'assets', 'trayIcon.png');
   const nimage = nativeImage.createFromPath(iconPath);
   tray = new Tray(nimage);
 

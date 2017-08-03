@@ -1,6 +1,7 @@
 // @flow
 import { ipcRenderer } from 'electron';
 import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 
 import TvShow from '../TvShow';
 import NextEpisodes from '../NextEpisodes';
@@ -54,9 +55,12 @@ export default class Home extends Component {
       <Wrapper>
         { (!this.state.video || (this.state.video && !this.state.video.title)) &&
           <NoVideoWrapper>
+            <Link to="/settings" className="settings">
+              <i className="fa fa-cog" aria-hidden="true" />
+            </Link>
             <div className="title">
-              <h2>TV Show Track</h2>
-              <p>No video detected</p>
+              <h2 data-text="TV Show Track">TV Show Track</h2>
+              <i>No video detected</i>
             </div>
             { this.state.watchNext &&
               <NextEpisodes data={this.state.watchNext} />

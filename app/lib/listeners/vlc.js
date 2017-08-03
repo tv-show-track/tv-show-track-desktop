@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import os from 'os';
 import axios from 'axios';
 import xml2js from 'xml2js';
@@ -12,6 +13,7 @@ import {
   setTraktVideoAsViewed
 } from '../trakt-tv';
 
+// const notifier = new nodeNotifier.NotificationCenter();
 
 const vlcServerURL = 'http://localhost:8888/requests/status.xml';
 const config = {
@@ -28,7 +30,6 @@ let watchProgressionEvent;
 let cancelIntervalInfos;
 
 ipcMain.on('watch-current-video', (event) => {
-  console.log('watch-current-video');
   currentVideo = null;
   currentVideoName = null;
   watchNewVideoEvent = event;
@@ -111,6 +112,7 @@ function getInfos() {
                 getTraktImages(video)
                   .then(images => {
                     currentVideo = { ...video, images, source: 'vlc' };
+                    console.log('images', images);
                     if (watchNewVideoEvent) {
                       watchNewVideoEvent.sender.send('new-current-video', currentVideo);
                     }
@@ -124,11 +126,15 @@ function getInfos() {
             setTraktVideoAsViewed(currentVideo)
               .then(() => {
                 currentVideo.viewed = true;
+                const icon = path.join(__dirname, '../..', 'assets', '1024x1024.png')
+                const twoDigits = nb => ((`0${nb}`).slice(-2));
                 notifier.notify({
-                  message: `${currentVideo.title} has been set as viewed on trakt.tv!`,
+                  title: `${currentVideo.title} ${currentVideo.episode.season}x${twoDigits(currentVideo.episode.number)}`,
+                  message: `Episode set as viewed on trakt.tv!`,
+                  icon,
                   sound: true,
                 });
-                currentVideo = null;
+                currentVideo = null;f
               });
           }
         } else {

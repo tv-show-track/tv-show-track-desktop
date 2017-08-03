@@ -3,20 +3,21 @@ import styled from 'styled-components';
 const Wrapper = styled.div`
   flex: 1;
   width: 100%;
-  max-height: 50vh;
+  max-height: 60vh;
   display: flex;
   flex-direction: column;
 
   .next-episodes {
     flex: 1;
-    padding: 8px 0;
     overflow-y: auto;
-    background-color: rgb(29, 35, 45);
+    background-color: rgb(28, 31, 35);
+    border-top: 1px solid rgb(28, 31, 35);
 
     .next-episode {
       text-align: center;
-      padding: 2px 0;
+      padding: 4px 0;
       font-size: 14px;
+      background: linear-gradient(rgb(29, 35, 45), rgb(28, 31, 35));
     }
   }
 `;

@@ -17,7 +17,7 @@ export default class NextEpisodes extends Component {
     const twoDigits = nb => ((`0${nb}`).slice(-2));
     return (
       <Wrapper>
-        <h3>Next episodes to watch</h3>
+        <h3>- Next episodes to watch -</h3>
         <div className="next-episodes">
         {
           this.props.data.map((object) => (

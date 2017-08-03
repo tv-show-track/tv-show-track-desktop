@@ -17,8 +17,9 @@ const options = {
   },
   options: {
     images: {
-      tvdbApiKey: 'eb245f8784a98c4f2fcba7ffa5c01af7',
+      tvdbApiKey: '2566B8501D53F2B8',
       fanartApiKey: '4ba5317680ccbc081c1d351eec057583',
+      tmdbApiKey: 'eb245f8784a98c4f2fcba7ffa5c01af7',
     },
   },
 };
@@ -44,7 +45,6 @@ function connectTrakt(event) {
 }
 
 async function getCalendar(event) {
-  console.log('getCalendar');
   await reAuthTrakt();
   const history = await trakt.sync.history.get();
   const filteredRes = _.uniqBy(history, e => e.show && e.show.ids.trakt);
@@ -78,8 +78,9 @@ function authTrakt(event) {
   return new Promise((resolve, reject) => {
     trakt.get_codes()
       .then(poll => {
+        event.sender.send('trakt-connecting', poll);
         clipboard.writeText(poll.user_code);
-        shell.openExternal(poll.verification_url);
+        // shell.openExternal(poll.verification_url);
         return trakt.poll_access(poll)
           .then(auth => {
             return Database.writeSetting({

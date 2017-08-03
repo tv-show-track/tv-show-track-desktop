@@ -14,5 +14,6 @@
   },
   "license": "MIT",
   "dependencies": {
+    "node-notifier": "^5.1.2"
   }
 }
