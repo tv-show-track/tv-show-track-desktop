@@ -8,6 +8,7 @@ const Wrapper = styled.div`
   align-items: center;
 
   p {
+    text-align: center;
     font-size: 1.2em;
   }
 `;

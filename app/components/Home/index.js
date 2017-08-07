@@ -7,6 +7,7 @@ import TvShow from '../TvShow';
 import NextEpisodes from '../NextEpisodes';
 import Wrapper from './Wrapper';
 import NoVideoWrapper from './NoVideoWrapper';
+import Title from '../Title';
 
 export default class Home extends Component {
 
@@ -59,7 +60,7 @@ export default class Home extends Component {
               <i className="fa fa-cog" aria-hidden="true" />
             </Link>
             <div className="title">
-              <h2 data-text="TV Show Track">TV Show Track</h2>
+              <Title data-text="TV Show Track">TV Show Track</Title>
               <i>No video detected</i>
             </div>
             { this.state.watchNext &&

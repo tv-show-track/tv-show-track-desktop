@@ -54,11 +54,16 @@ const Database = {
     }))
   ),
 
+  deleteSetting: data => (
+    db.settings.remove({
+      key: data.key
+    })
+  ),
+
   getSettings: () => promisifyDb(db.settings.find({})),
 
-  writeSetting: data => {
-    console.log('writeSetting', DATA_PATH);
-    return Database.getSetting({
+  writeSetting: data => (
+    Database.getSetting({
       key: data.key
     })
     .then(result => {
@@ -73,8 +78,8 @@ const Database = {
       }
       return db.settings.insert(data);
     })
-    .catch(console.log);
-  },
+    .catch(console.log)
+  ),
 
   resetSettings: () => (
     db.settings.remove({}, {

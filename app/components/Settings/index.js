@@ -11,7 +11,7 @@ export default class SettingsPage extends Component {
     return (
       <Wrapper>
         <Link to="/home" className="back">
-          <i className="fa fa-times" aria-hidden="true" />
+          <i className="fa fa-arrow-left" aria-hidden="true" />
         </Link>
         <div className="title">
           <h2>Settings</h2>

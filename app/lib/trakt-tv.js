@@ -26,7 +26,9 @@ const options = {
 
 const trakt = new Trakt(options);
 
+ipcMain.on('is-trakt-connected', isTraktConnected);
 ipcMain.on('connect-trakt', connectTrakt);
+ipcMain.on('disconnect-trakt', disconnectTrakt);
 ipcMain.on('get-calendar', getCalendar);
 
 function setTraktVideoAsViewed(video) {
@@ -42,6 +44,32 @@ function connectTrakt(event) {
     .then(setAsConfigured)
     .then(listenVlc)
     .catch(console.error);
+}
+
+async function disconnectTrakt(event) {
+  await Database.deleteSetting({
+    key: 'authTraktTv'
+  });
+  await Database.deleteSetting({
+    key: 'isConfigured'
+  });
+
+  event.sender.send('trakt-disconnected');
+}
+
+async function isTraktConnected(event) {
+  const res = await Database.getSetting({
+    key: 'authTraktTv'
+  });
+  const isConnected = res && res.value;
+
+  console.log('isConnected', isConnected);
+
+  if (isConnected) {
+    event.sender.send('trakt-connected');
+  }
+
+  return isConnected;
 }
 
 async function getCalendar(event) {
@@ -82,8 +110,8 @@ function authTrakt(event) {
         clipboard.writeText(poll.user_code);
         // shell.openExternal(poll.verification_url);
         return trakt.poll_access(poll)
-          .then(auth => {
-            return Database.writeSetting({
+          .then(auth => (
+            Database.writeSetting({
               key: 'authTraktTv',
               value: auth
             }).then(() => {
@@ -92,8 +120,8 @@ function authTrakt(event) {
                 event.sender.send('trakt-connected');
               }
               return false;
-            });
-          });
+            })
+          ));
       }, reject)
       .catch(reject);
   })

@@ -112,7 +112,6 @@ function getInfos() {
                 getTraktImages(video)
                   .then(images => {
                     currentVideo = { ...video, images, source: 'vlc' };
-                    console.log('images', images);
                     if (watchNewVideoEvent) {
                       watchNewVideoEvent.sender.send('new-current-video', currentVideo);
                     }

@@ -2,15 +2,29 @@
 import { ipcRenderer } from 'electron';
 import React, { Component } from 'react';
 
-import Config from 'components/Config';
+import { history } from '../../store/configureStore';
+import Config from '../Config';
 import Wrapper from './Wrapper';
+import Title from '../Title';
 
 export default class FirstTimeConfig extends Component {
+
+  constructor() {
+    super();
+
+    ipcRenderer.once('is-configured', () => {
+      history.push('/home');
+    });
+    ipcRenderer.send('is-configured');
+  }
+
   render() {
     return (
       <Wrapper>
-        <h2>TV Show Track</h2>
-        <p>First-time configuration</p>
+        <div>
+          <Title data-text="TV Show Track">TV Show Track</Title>
+          <p>First-time configuration</p>
+        </div>
         <Config />
       </Wrapper>
     );

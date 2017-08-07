@@ -8,6 +8,7 @@ const Wrapper = styled.div`
   flex-direction: column;
 
   .next-episodes {
+    position: relative;
     flex: 1;
     overflow-y: auto;
     background-color: rgb(28, 31, 35);
@@ -18,6 +19,16 @@ const Wrapper = styled.div`
       padding: 4px 0;
       font-size: 14px;
       background: linear-gradient(rgb(29, 35, 45), rgb(28, 31, 35));
+    }
+
+    .connect-first {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%;
+      text-align: center;
+      font-size: 0.85em;
     }
   }
 `;

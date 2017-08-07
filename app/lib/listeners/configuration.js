@@ -2,19 +2,23 @@ import { ipcMain } from 'electron';
 import Database from '../database';
 
 export function watchconf() {
-  ipcMain.on('is-configured', isFirstTime);
+  ipcMain.on('is-first-time', isFirstTime);
+  ipcMain.on('is-configured', isConfigured);
 }
 
-function isFirstTime(event) {
-  Database
-    .getSetting({ key: 'isConfigured' })
-    .then(doc => {
-      event.sender.send('is-configured', !!doc);
+async function isFirstTime(event) {
+  try {
+    await checkConfiguration();
+    event.sender.send('is-first-time', true);
+  } catch (e) {
+    event.sender.send('is-first-time', false);
+  }
+  setLastUsage();
+}
 
-      setLastUsage();
-      return true;
-    })
-    .catch(console.error);
+async function isConfigured(event) {
+  const res = await checkConfiguration();
+  event.sender.send('is-configured', !!res);
 }
 
 function setLastUsage() {
@@ -24,17 +28,15 @@ function setLastUsage() {
   });
 }
 
-export function isConfigured() {
+export function checkConfiguration() {
   return Database
     .getSetting({ key: 'isConfigured' })
     .then(doc => (
       new Promise((resolve, reject) => {
-        console.log('isConfigured', doc);
         if (doc && doc.value) {
           return resolve();
         }
 
-        console.log('reject');
         return reject();
       })
     ));

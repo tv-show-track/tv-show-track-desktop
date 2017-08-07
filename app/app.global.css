@@ -40,3 +40,7 @@ a:hover {
   text-decoration: none;
   cursor: pointer;
 }
+
+button:active, button:focus, button:focus:active {
+  outline: 0!important;
+}

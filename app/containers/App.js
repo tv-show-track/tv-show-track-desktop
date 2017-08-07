@@ -18,8 +18,8 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-    ipcRenderer.on('is-configured', App.isConfigured);
-    ipcRenderer.send('is-configured');
+    ipcRenderer.once('is-first-time', App.isConfigured);
+    ipcRenderer.send('is-first-time');
     ipcRenderer.send('initialize-tracking');
   }
 
