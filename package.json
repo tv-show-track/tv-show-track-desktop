@@ -32,7 +32,7 @@
   "browserslist": "electron 1.6",
   "build": {
     "productName": "TV Show Track",
-    "appId": "org.matthieuh.tv-show-track",
+    "appId": "com.matthieuh.desktop.tvshowtrack",
     "files": [
       "dist/",
       "node_modules/",
