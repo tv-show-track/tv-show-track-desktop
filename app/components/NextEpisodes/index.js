@@ -27,7 +27,6 @@ export default class NextEpisodes extends Component {
   };
 
   setTraktConnected() {
-    console.log('setTraktConnected');
     this.setState({ connected: true });
   }
 

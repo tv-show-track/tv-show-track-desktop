@@ -17,7 +17,8 @@ export default class ConnectTrakt extends Component {
       expires_in: number,
       device_code: string
     },
-    expireInterval: any
+    expireInterval: any,
+    statusMsg: string
   };
 
   constructor() {
@@ -31,8 +32,18 @@ export default class ConnectTrakt extends Component {
         expires_in: 0,
         device_code: ''
       },
-      expireInterval: null
+      expireInterval: null,
+      statusMsg: 'Connecting...'
     };
+  }
+
+  componentDidMount() {
+    ipcRenderer.removeAllListeners('trakt-connected');
+    ipcRenderer.removeAllListeners('connect-trakt-error');
+
+    ipcRenderer.on('connect-trakt-error', (event, statusMsg) => {
+      this.setState({ statusMsg });
+    });
 
     ipcRenderer.once('trakt-connected', () => {
       history.goBack()
@@ -43,7 +54,9 @@ export default class ConnectTrakt extends Component {
     }
 
     ipcRenderer.once('trakt-connecting', (event, poll) => {
+      this.setState({ statusMsg: 'Connecting...' });
       this.setState({ poll });
+
       this.expireInterval = setInterval(() => {
         const updatedPoll = poll;
         updatedPoll.expires_in = poll.expires_in - 1;
@@ -53,24 +66,33 @@ export default class ConnectTrakt extends Component {
         }
       }, 1000);
     });
+
     ipcRenderer.send('connect-trakt');
   }
 
   render() {
     return (
       <Wrapper>
-        <h3>Connecting to Trakt.tv</h3>
-        <ul>
-          <li>1 - Go to <a role="link" onClick={() => shell.openExternal(this.state.poll.verification_url)}>
-            { this.state.poll.verification_url }
-          </a></li>
-          <li className="code-wrapper">
-            <div>2 - Copy/paste this code:</div>
-            <div className="code">{ this.state.poll.user_code }</div>
-            <i>Expires in <span>{ this.state.poll.expires_in }</span></i>
-          </li>
-          <li>3 - Allow tvshowtrack to use your account</li>
-        </ul>
+        { this.state.poll &&
+          <div>
+            <h3>Connecting to Trakt.tv</h3>
+            <ul>
+              <li>1 - Go to <a role="link" onClick={() => shell.openExternal(this.state.poll.verification_url)}>
+                { this.state.poll.verification_url }
+              </a></li>
+              <li className="code-wrapper">
+                <div>2 - Copy/paste this code:</div>
+                <div className="code">{ this.state.poll.user_code }</div>
+                <i>Expires in <span>{ this.state.poll.expires_in }</span></i>
+              </li>
+              <li>3 - Allow tvshowtrack to use your account</li>
+            </ul>
+          </div>
+        }
+        {
+          !this.state.poll && this.state.statusMsg &&
+          <div className="status-msg">{ this.state.statusMsg }</div>
+        }
         <Button
           type="button"
           onClick={() => history.goBack()}

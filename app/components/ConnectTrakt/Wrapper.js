@@ -5,6 +5,8 @@ const Wrapper = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  flex: 1;
+  text-align: center;
 
   ul {
     display: flex;
@@ -44,6 +46,11 @@ const Wrapper = styled.div`
     i {
       font-size: 0.8em;
     }
+  }
+
+  .status-msg {
+    margin: 20px;
+    text-align: center;
   }
 `;
 

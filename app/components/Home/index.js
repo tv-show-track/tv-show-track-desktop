@@ -23,8 +23,6 @@ export default class Home extends Component {
       this.onNewVideo(arg);
     });
     ipcRenderer.send('watch-current-video');
-
-    console.log('contructor Home');
   }
 
   state = {
@@ -33,10 +31,8 @@ export default class Home extends Component {
   };
 
   componentDidMount() {
-    console.log('componentDidMount Home');
     ipcRenderer.on('calendar', (event, arg) => {
       if (arg) {
-        console.log('calendar', arg);
         this.onNewWatchNext(arg);
       }
     });

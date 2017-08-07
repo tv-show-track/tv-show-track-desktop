@@ -39,11 +39,10 @@ function setTraktVideoAsViewed(video) {
   return trakt.sync.history.add(post);
 }
 
-function connectTrakt(event) {
-  authTrakt(event)
-    .then(setAsConfigured)
-    .then(listenVlc)
-    .catch(console.error);
+async function connectTrakt(event) {
+  const auth = await authTrakt(event);
+  await setAsConfigured(auth);
+  listenVlc();
 }
 
 async function disconnectTrakt(event) {
@@ -62,8 +61,6 @@ async function isTraktConnected(event) {
     key: 'authTraktTv'
   });
   const isConnected = res && res.value;
-
-  console.log('isConnected', isConnected);
 
   if (isConnected) {
     event.sender.send('trakt-connected');
@@ -102,31 +99,28 @@ function reAuthTrakt() {
   });
 }
 
-function authTrakt(event) {
-  return new Promise((resolve, reject) => {
-    trakt.get_codes()
-      .then(poll => {
-        event.sender.send('trakt-connecting', poll);
-        clipboard.writeText(poll.user_code);
-        // shell.openExternal(poll.verification_url);
-        return trakt.poll_access(poll)
-          .then(auth => (
-            Database.writeSetting({
-              key: 'authTraktTv',
-              value: auth
-            }).then(() => {
-              resolve(auth);
-              if (event) {
-                event.sender.send('trakt-connected');
-              }
-              return false;
-            })
-          ));
-      }, reject)
-      .catch(reject);
-  })
-  .then(auth => (trakt.import_token(auth)))
-  .catch(console.log);
+async function authTrakt(event) {
+  try {
+    const poll = await trakt.get_codes()
+    if (poll) {
+      event.sender.send('trakt-connecting', poll);
+      clipboard.writeText(poll.user_code);
+
+      const auth = await trakt.poll_access(poll);
+
+      if (auth && event) {
+        await Database.writeSetting({
+          key: 'authTraktTv',
+          value: auth
+        });
+        event.sender.send('trakt-connected');
+        return auth;
+      }
+    }
+  } catch (err) {
+    const errMsg = 'Trakt.tv api is actually unreachable or encounter an issue so please retry later.';
+    event.sender.send('connect-trakt-error', errMsg);
+  }
 }
 
 function matchTraktVideo(videoName) {

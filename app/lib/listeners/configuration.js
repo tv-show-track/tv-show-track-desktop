@@ -42,8 +42,7 @@ export function checkConfiguration() {
     ));
 }
 
-export function setAsConfigured() {
-  return Database
-    .writeSetting({ key: 'isConfigured', value: true })
-    .catch(console.error);
+export async function setAsConfigured() {
+  const res = await Database.writeSetting({ key: 'isConfigured', value: true });
+  return res;
 }

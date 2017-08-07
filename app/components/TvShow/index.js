@@ -30,12 +30,9 @@ export default class TvShow extends Component {
     ipcRenderer.on('progression', (event, arg) => {
       if (arg && arg.pc) {
         this.setState({ progression: arg });
-        console.log('set state progression', this.state);
       }
     });
     ipcRenderer.send('watch-progression');
-
-    console.log('this.props.video', this.props.video)
   }
 
   render() {

@@ -15,7 +15,11 @@ body {
   height: 100vh;
 }
 
-#root > [data-reactroot] { height: 100% }
+#root > [data-reactroot] {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 
 h2 {
   margin: 0;
