@@ -74,7 +74,9 @@ const Database = {
           $set: {
             value: data.value
           }
-        }, {});
+        }, {
+          upsert: true
+        });
       }
       return db.settings.insert(data);
     })

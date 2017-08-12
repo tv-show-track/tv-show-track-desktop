@@ -3,7 +3,7 @@ import { ipcRenderer } from 'electron';
 import React, { Component } from 'react';
 
 import { history } from '../../store/configureStore';
-import Config from '../Config';
+import ConnectTraktButton from '../ConnectTraktButton';
 import Wrapper from './Wrapper';
 import Title from '../Title';
 
@@ -25,7 +25,7 @@ export default class FirstTimeConfig extends Component {
           <Title data-text="TV Show Track">TV Show Track</Title>
           <p>First-time configuration</p>
         </div>
-        <Config />
+        <ConnectTraktButton />
       </Wrapper>
     );
   }

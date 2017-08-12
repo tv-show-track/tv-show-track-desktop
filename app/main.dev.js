@@ -15,8 +15,10 @@ import { app, BrowserWindow, Tray, nativeImage, ipcMain } from 'electron';
 import Positioner from 'electron-positioner';
 import MenuBuilder from './menu';
 import Database, { checkIfValidProviders } from './lib/database';
-import { watchconf, isConfigured } from './lib/listeners/configuration';
+import { watchConf, isConfigured } from './lib/listeners/configuration';
+import { init as initScrobbler } from './lib/scrobbler';
 import { configureVlc, listenVlc } from './lib/listeners/vlc';
+import { listenChromeCast } from './lib/listeners/chromecast';
 
 
 if (process.env.NODE_ENV === 'production') {
@@ -95,14 +97,15 @@ ipcMain.on('initialize-tracking', initializeTracking);
  */
 
 function initializeTracking() {
-  console.log('initializeTracking');
-  watchconf();
+  watchConf();
 
   Database.initialize()
     .then(configureVlc)
     .then(isConfigured)
     .then(checkIfValidProviders)
+    .then(initScrobbler)
     .then(listenVlc)
+    .then(listenChromeCast)
     .catch(console.error);
 }
 

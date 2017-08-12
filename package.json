@@ -1,7 +1,7 @@
 {
   "name": "tv-show-track",
   "productName": "TV Show Track",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "description": "TV Show Track is an app to automatically set as viewed on Trakt.tv episodes that you watch on VLC and giving you the next one you have to see.",
   "scripts": {
     "build": "concurrently \"npm run build-main\" \"npm run build-renderer\"",
@@ -42,6 +42,7 @@
       "main.prod.js.map",
       "package.json"
     ],
+    "forceCodeSigning": true,
     "dmg": {
       "contents": [
         {
@@ -55,6 +56,19 @@
           "path": "/Applications"
         }
       ]
+    },
+    "mac": {
+      "type": "distribution",
+      "icon": "resources/icon.icns",
+      "target": [
+        "pkg",
+        "dmg",
+        "zip",
+        "mas"
+      ]
+    },
+    "mas": {
+      "category": "public.app-category.video"
     },
     "win": {
       "target": [
@@ -140,7 +154,7 @@
     "cross-spawn": "^5.1.0",
     "css-loader": "^0.28.3",
     "electron": "^1.6.10",
-    "electron-builder": "^19.8.0",
+    "electron-builder": "^19.19.1",
     "electron-devtools-installer": "^2.2.0",
     "enzyme": "^2.9.1",
     "enzyme-to-json": "^1.5.1",
@@ -188,8 +202,10 @@
   },
   "dependencies": {
     "axios": "^0.16.2",
+    "castv2-client": "^1.2.0",
     "chrome-launcher": "^0.3.2",
     "chrome-remote-interface": "^0.24.2",
+    "chromecast-scanner": "^0.5.0",
     "devtron": "^1.4.0",
     "electron-debug": "^1.2.0",
     "electron-positioner": "^3.0.0",

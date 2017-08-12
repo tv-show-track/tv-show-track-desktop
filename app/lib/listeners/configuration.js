@@ -1,9 +1,10 @@
 import { ipcMain } from 'electron';
 import Database from '../database';
 
-export function watchconf() {
+export function watchConf() {
   ipcMain.on('is-first-time', isFirstTime);
   ipcMain.on('is-configured', isConfigured);
+  ipcMain.on('reset-settings', resetSettings);
 }
 
 async function isFirstTime(event) {
@@ -19,6 +20,11 @@ async function isFirstTime(event) {
 async function isConfigured(event) {
   const res = await checkConfiguration();
   event.sender.send('is-configured', !!res);
+}
+
+async function resetSettings(event) {
+  await Database.resetSettings();
+  event.sender.send('settings-reseted');
 }
 
 function setLastUsage() {

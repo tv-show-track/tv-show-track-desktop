@@ -1,19 +1,11 @@
 import fs from 'fs';
-import path from 'path';
 import os from 'os';
 import axios from 'axios';
 import xml2js from 'xml2js';
 import * as _ from 'lodash';
 import { ipcMain } from 'electron';
-import notifier from 'node-notifier';
-
-import {
-  getTraktImages,
-  matchTraktVideo,
-  setTraktVideoAsViewed
-} from '../trakt-tv';
-
-// const notifier = new nodeNotifier.NotificationCenter();
+import Database from '../database';
+import { play, stop } from '../scrobbler';
 
 const vlcServerURL = 'http://localhost:8888/requests/status.xml';
 const config = {
@@ -22,32 +14,36 @@ const config = {
   }
 };
 
-let currentVideoName;
-let currentVideo;
-let progression;
-let watchNewVideoEvent;
-let watchProgressionEvent;
 let cancelIntervalInfos;
 
-ipcMain.on('watch-current-video', (event) => {
-  currentVideo = null;
-  currentVideoName = null;
-  watchNewVideoEvent = event;
-  listenVlc();
+ipcMain.on('is-vlc-installed', async (event) => {
+  const res = await Database.getSetting({ key: 'vlcInstalled' });
+
+  if (res && res.value) {
+    event.sender.send('vlc-installed');
+  }
 });
 
-ipcMain.on('watch-progression', (event) => {
-  progression = null;
-  currentVideoName = null;
-  watchProgressionEvent = event;
-  listenVlc();
+ipcMain.on('is-vlc-configured', async (event) => {
+  const res = await Database.getSetting({ key: 'vlcConfigured' });
+
+  if (res && res.value) {
+    event.sender.send('vlc-configured');
+  }
+});
+
+ipcMain.on('check-vlc', (event) => {
+  configureVlc()
+    .then(listenVlc)
+    .then(() => event.sender.send('vlc-checked'))
+    .catch(console.log);
 });
 
 function listenVlc() {
   if (cancelIntervalInfos) {
     clearInterval(cancelIntervalInfos);
   }
-  cancelIntervalInfos = setInterval(getInfos, 1000);
+  cancelIntervalInfos = setInterval(getMediaInfos, 1000);
 }
 
 function configureVlc() {
@@ -63,9 +59,15 @@ function configureVlc() {
   return new Promise((resolve, reject) => {
     fs.readFile(configPath, 'utf8', (err, data) => {
       if (err) {
-        console.log(err);
-        reject(err);
+        console.log('Error reading vlc config file', err);
+        Database.writeSetting({
+          key: 'vlcInstalled',
+          value: false
+        });
+        return reject(err);
       }
+
+      console.log('Reading VLC config file...', configPath);
 
       let result = data.replace(/\s#http-port?[^\s]+/g, '\r\nhttp-port=');
       result = result.replace(/\shttp-port=?[^\s]+/g, '\r\nhttp-port=8888');
@@ -76,10 +78,23 @@ function configureVlc() {
       result = result.replace(/\s#extraintf?[^\s]+/g, '\r\nextraintf=');
       result = result.replace(/\sextraintf=?[^\s]+/g, '\r\nextraintf=http');
 
-      fs.writeFile(configPath, result, 'utf8', (error) => {
+      fs.writeFile(configPath, result, 'utf8', async (error) => {
         if (error) {
           reject(error);
         } else {
+          try {
+            await Database.writeSetting({
+              key: 'vlcInstalled',
+              value: true
+            });
+            await Database.writeSetting({
+              key: 'vlcConfigured',
+              value: true
+            });
+            console.log('VLC installed and configured');
+          } catch (e) {
+            console.log('Error setting VLC as installed and as configured', e);
+          }
           resolve();
         }
       });
@@ -87,65 +102,27 @@ function configureVlc() {
   });
 }
 
-function getInfos() {
-  return axios.get(vlcServerURL, config)
-    .then(response => {
-      xml2js.parseString(response.data, (err, result) => {
-        let infos = _.get(result, 'root.information[0].category[0].info');
+async function getMediaInfos() {
+  try {
+    const response = await axios.get(vlcServerURL, config);
+    if (response && response.data) {
+      xml2js.parseString(response.data, async (err, result) => {
+        const infos = _.get(result, 'root.information[0].category[0].info');
         const filenameFinder = _.find(infos, n => n.$.name === 'filename');
 
-        let videoName = _.get(filenameFinder, '_');
+        const title = _.get(filenameFinder, '_');
         const position = _.get(result, 'root.position[0]');
 
-        if (videoName) {
-          if (
-            watchProgressionEvent &&
-            (!progression || (progression && progression.pc !== position * 100))
-          ) {
-            watchProgressionEvent.sender.send('progression', { pc: position * 100 });
-          }
-
-          if (currentVideoName !== videoName) {
-            currentVideoName = videoName;
-            matchTraktVideo(videoName, position)
-              .then(video => (
-                getTraktImages(video)
-                  .then(images => {
-                    currentVideo = { ...video, images, source: 'vlc' };
-                    if (watchNewVideoEvent) {
-                      watchNewVideoEvent.sender.send('new-current-video', currentVideo);
-                    }
-                    return currentVideo;
-                  })
-              ))
-              .catch(console.error);
-          }
-
-          if (currentVideo && position > 0.80 && !currentVideo.viewed) {
-            setTraktVideoAsViewed(currentVideo)
-              .then(() => {
-                currentVideo.viewed = true;
-                const icon = path.join(__dirname, '../..', 'assets', '1024x1024.png')
-                const twoDigits = nb => ((`0${nb}`).slice(-2));
-                notifier.notify({
-                  title: `${currentVideo.title} ${currentVideo.episode.season}x${twoDigits(currentVideo.episode.number)}`,
-                  message: `Episode set as viewed on trakt.tv!`,
-                  icon,
-                  sound: true,
-                });
-                currentVideo = null;f
-              });
-          }
+        if (title) {
+          play({ provider: 'vlc', title, position });
         } else {
-          if (currentVideoName) {
-            watchNewVideoEvent.sender.send('new-current-video', null);
-          }
-          currentVideoName = null;
-          videoName = null;
+          stop('vlc');
         }
       });
-    })
-    .catch(console.log);
+    }
+  } catch (err) {
+    console.log('Error reading vlc infos', err.code);
+  }
 }
 
 export { configureVlc, listenVlc };

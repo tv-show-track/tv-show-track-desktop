@@ -101,7 +101,7 @@ function reAuthTrakt() {
 
 async function authTrakt(event) {
   try {
-    const poll = await trakt.get_codes()
+    const poll = await trakt.get_codes();
     if (poll) {
       event.sender.send('trakt-connecting', poll);
       clipboard.writeText(poll.user_code);
@@ -123,19 +123,23 @@ async function authTrakt(event) {
   }
 }
 
-function matchTraktVideo(videoName) {
-  return trakt.matcher.match({
+async function matchTraktVideo(videoName) {
+  const video = await trakt.matcher.match({
     filename: videoName
   });
+  return video;
 }
 
-function getTraktImages(video) {
+async function getTraktImages(video) {
   const request = video;
   request.title = video.show.title;
   request.type = 'show';
   request.imdb_id = video.show.ids.imdb;
   request.tvdb_id = video.show.ids.tvdb;
-  return trakt.images.get(request);
+  console.log('request');
+  const images = await trakt.images.get(request);
+  console.log('images', images);
+  return images;
 }
 
 export {

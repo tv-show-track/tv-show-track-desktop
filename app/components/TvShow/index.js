@@ -40,7 +40,7 @@ export default class TvShow extends Component {
     return (
       <Wrapper bgImage={this.props.video && this.props.video.images && this.props.video.images.background}>
         <Infos>
-          <h2>{ this.props.video.title } { this.props.video.episode.season }x{ twoDigits(this.props.video.episode.number) }</h2>
+          <h2>{ this.props.video.show.title } { this.props.video.episode.season }x{ twoDigits(this.props.video.episode.number) }</h2>
           <h3>{ this.props.video.episode.title }</h3>
           {/* <PlayIcon />
           <PauseIcon /> */}

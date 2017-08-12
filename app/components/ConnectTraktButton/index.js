@@ -14,6 +14,14 @@ export default class ConnectTraktButton extends Component {
     connecting: boolean
   };
 
+  static connectToTrakt() {
+    if (navigator.onLine) {
+      history.push('/connect-trakt');
+    } else {
+      alert('Sorry but it seems that you are not connected to internet and you it to connect to Trakt.tv');
+    }
+  }
+
   constructor() {
     super();
 
@@ -49,7 +57,7 @@ export default class ConnectTraktButton extends Component {
         { !this.state.connected && !this.state.connecting &&
           <Button
             type="button"
-            onClick={() => history.push('/connect-trakt')}
+            onClick={() => ConnectTraktButton.connectToTrakt()}
           >Connect to Trakt.tv</Button>
         }
         { this.state.connected &&

@@ -17,10 +17,17 @@ export default class App extends Component {
     }
   }
 
+  static sendNotification(event, arg) {
+    new Notification(arg.title, {
+      body: arg.body
+    });
+  }
   componentDidMount() {
     ipcRenderer.once('is-first-time', App.isConfigured);
     ipcRenderer.send('is-first-time');
     ipcRenderer.send('initialize-tracking');
+    ipcRenderer.on('notification', App.sendNotification);
+    ipcRenderer.send('notification');
   }
 
   render() {

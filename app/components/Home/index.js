@@ -20,6 +20,7 @@ export default class Home extends Component {
     };
 
     ipcRenderer.on('new-current-video', (event, arg) => {
+      console.log('new-current-video', arg);
       this.onNewVideo(arg);
     });
     ipcRenderer.send('watch-current-video');
@@ -50,7 +51,7 @@ export default class Home extends Component {
   render() {
     return (
       <Wrapper>
-        { (!this.state.video || (this.state.video && !this.state.video.title)) &&
+        { (!this.state.video || (this.state.video && !this.state.video.episode)) &&
           <NoVideoWrapper>
             <Link to="/settings" className="settings">
               <i className="fa fa-cog" aria-hidden="true" />
@@ -64,7 +65,7 @@ export default class Home extends Component {
             }
           </NoVideoWrapper>
         }
-        { this.state.video && this.state.video.title &&
+        { this.state.video && this.state.video.episode &&
           <TvShow video={this.state.video} />
         }
       </Wrapper>
