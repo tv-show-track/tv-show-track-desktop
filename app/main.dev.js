@@ -100,12 +100,14 @@ function initializeTracking() {
   watchConf();
 
   Database.initialize()
-    .then(configureVlc)
-    .then(isConfigured)
     .then(checkIfValidProviders)
     .then(initScrobbler)
-    .then(listenVlc)
-    .then(listenChromeCast)
+    .then(() => {
+      configureVlc()
+        .then(listenVlc)
+        .catch(console.error);
+      listenChromeCast();
+    })
     .catch(console.error);
 }
 

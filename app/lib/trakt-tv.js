@@ -40,8 +40,13 @@ function setTraktVideoAsViewed(video) {
 }
 
 async function connectTrakt(event) {
-  const auth = await authTrakt(event);
-  await setAsConfigured(auth);
+  try {
+    const auth = await authTrakt(event);
+    await setAsConfigured(auth);
+  } catch (e) {
+    const errMsg = 'Trakt.tv api is actually unreachable or encounter an issue so please retry later.';
+    event.sender.send('connect-trakt-error', errMsg);
+  }
   listenVlc();
 }
 
@@ -101,7 +106,12 @@ function reAuthTrakt() {
 
 async function authTrakt(event) {
   try {
-    const poll = await trakt.get_codes();
+    const poll = await Promise.race([
+      trakt.get_codes(),
+      new Promise((resolve, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 3000)
+      )
+    ]);
     if (poll) {
       event.sender.send('trakt-connecting', poll);
       clipboard.writeText(poll.user_code);
@@ -118,6 +128,7 @@ async function authTrakt(event) {
       }
     }
   } catch (err) {
+    console.log('err', err);
     const errMsg = 'Trakt.tv api is actually unreachable or encounter an issue so please retry later.';
     event.sender.send('connect-trakt-error', errMsg);
   }

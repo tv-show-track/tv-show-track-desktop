@@ -13,6 +13,9 @@ export default class Config extends Component {
       ipcRenderer.send('is-vlc-installed');
       ipcRenderer.send('is-vlc-configured');
     });
+    ipcRenderer.on('vlc-configure-error', (event, arg) => {
+      alert(JSON.stringify(arg));
+    });
     ipcRenderer.send('check-vlc');
   }
 

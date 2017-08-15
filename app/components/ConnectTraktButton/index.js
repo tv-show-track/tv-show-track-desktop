@@ -10,15 +10,14 @@ import Button from '../Button';
 export default class ConnectTraktButton extends Component {
 
   state: {
-    connected: boolean,
-    connecting: boolean
+    connected: boolean
   };
 
   static connectToTrakt() {
     if (navigator.onLine) {
       history.push('/connect-trakt');
     } else {
-      alert('Sorry but it seems that you are not connected to internet and you it to connect to Trakt.tv');
+      alert('Sorry but it seems that you are not connected to internet and you need it to connect to Trakt.tv');
     }
   }
 
@@ -26,8 +25,7 @@ export default class ConnectTraktButton extends Component {
     super();
 
     this.state = {
-      connected: false,
-      connecting: false
+      connected: false
     };
 
     ipcRenderer.once('trakt-connected', () => {
@@ -44,17 +42,17 @@ export default class ConnectTraktButton extends Component {
   }
 
   setConnected() {
-    this.setState({ connecting: false, connected: true });
+    this.setState({ connected: true });
   }
 
   setDisconnected() {
-    this.setState({ connecting: false, connected: false });
+    this.setState({ connected: false });
   }
 
   render() {
     return (
       <Wrapper>
-        { !this.state.connected && !this.state.connecting &&
+        { !this.state.connected &&
           <Button
             type="button"
             onClick={() => ConnectTraktButton.connectToTrakt()}

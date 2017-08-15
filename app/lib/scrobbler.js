@@ -97,7 +97,7 @@ async function play(status) {
 }
 
 function stop(provider) {
-  console.log('stop', provider);
+  currentTitle = null;
   if (watchNewVideoEvent && provider === currentProvider) {
     watchNewVideoEvent.sender.send('new-current-video', null);
   }

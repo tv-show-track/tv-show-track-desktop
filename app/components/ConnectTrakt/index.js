@@ -33,7 +33,7 @@ export default class ConnectTrakt extends Component {
         device_code: ''
       },
       expireInterval: null,
-      statusMsg: 'Connecting...'
+      statusMsg: ''
     };
   }
 
@@ -42,6 +42,7 @@ export default class ConnectTrakt extends Component {
     ipcRenderer.removeAllListeners('connect-trakt-error');
 
     ipcRenderer.on('connect-trakt-error', (event, statusMsg) => {
+      console.log('connect-trakt-error', statusMsg, this.state.poll);
       this.setState({ statusMsg });
     });
 
@@ -54,7 +55,6 @@ export default class ConnectTrakt extends Component {
     }
 
     ipcRenderer.once('trakt-connecting', (event, poll) => {
-      this.setState({ statusMsg: 'Connecting...' });
       this.setState({ poll });
 
       this.expireInterval = setInterval(() => {
@@ -73,7 +73,7 @@ export default class ConnectTrakt extends Component {
   render() {
     return (
       <Wrapper>
-        { this.state.poll &&
+        { this.state.poll.user_code && !this.state.statusMsg &&
           <div>
             <h3>Connecting to Trakt.tv</h3>
             <ul>
@@ -90,8 +90,8 @@ export default class ConnectTrakt extends Component {
           </div>
         }
         {
-          !this.state.poll && this.state.statusMsg &&
-          <div className="status-msg">{ this.state.statusMsg }</div>
+          (this.state.statusMsg || !this.state.poll.user_code) &&
+          <div className="status-msg">{ this.state.statusMsg || 'Connecting...' }</div>
         }
         <Button
           type="button"

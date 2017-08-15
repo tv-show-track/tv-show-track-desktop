@@ -4,6 +4,8 @@ import axios from 'axios';
 import xml2js from 'xml2js';
 import * as _ from 'lodash';
 import { ipcMain } from 'electron';
+import getUsername from 'username'
+
 import Database from '../database';
 import { play, stop } from '../scrobbler';
 
@@ -36,7 +38,10 @@ ipcMain.on('check-vlc', (event) => {
   configureVlc()
     .then(listenVlc)
     .then(() => event.sender.send('vlc-checked'))
-    .catch(console.log);
+    .catch(err => {
+      console.log('err', err);
+      // event.sender.send('vlc-configure-error', err);
+    });
 });
 
 function listenVlc() {
@@ -49,56 +54,59 @@ function listenVlc() {
 function configureVlc() {
   let configPath;
 
-  switch (os.platform()) {
-    default:
-    case 'darwin':
-      configPath = `${process.env.HOME}/Library/Preferences/org.videolan.vlc/vlcrc`;
-      break;
-  }
-
   return new Promise((resolve, reject) => {
-    fs.readFile(configPath, 'utf8', (err, data) => {
-      if (err) {
-        console.log('Error reading vlc config file', err);
-        Database.writeSetting({
-          key: 'vlcInstalled',
-          value: false
-        });
-        return reject(err);
+    getUsername().then(username => {
+      switch (os.platform()) {
+        default:
+        case 'darwin':
+          configPath = `/Users/${username}/Library/Preferences/org.videolan.vlc/vlcrc`;
+          break;
       }
 
-      console.log('Reading VLC config file...', configPath);
-
-      let result = data.replace(/\s#http-port?[^\s]+/g, '\r\nhttp-port=');
-      result = result.replace(/\shttp-port=?[^\s]+/g, '\r\nhttp-port=8888');
-
-      result = result.replace(/\s#http-password?[^\s]+/g, '\r\nhttp-password=');
-      result = result.replace(/\shttp-password=?[^\s]+/g, '\r\nhttp-password=vlcrc');
-
-      result = result.replace(/\s#extraintf?[^\s]+/g, '\r\nextraintf=');
-      result = result.replace(/\sextraintf=?[^\s]+/g, '\r\nextraintf=http');
-
-      fs.writeFile(configPath, result, 'utf8', async (error) => {
-        if (error) {
-          reject(error);
-        } else {
-          try {
-            await Database.writeSetting({
-              key: 'vlcInstalled',
-              value: true
-            });
-            await Database.writeSetting({
-              key: 'vlcConfigured',
-              value: true
-            });
-            console.log('VLC installed and configured');
-          } catch (e) {
-            console.log('Error setting VLC as installed and as configured', e);
-          }
-          resolve();
+      fs.readFile(configPath, 'utf8', (err, data) => {
+        if (err) {
+          console.log('Error reading vlc config file', err);
+          Database.writeSetting({
+            key: 'vlcInstalled',
+            value: false
+          });
+          return reject(err);
         }
+
+        console.log('Reading VLC config file...', configPath);
+
+        let result = data.replace(/\s#http-port?[^\s]+/g, '\r\nhttp-port=');
+        result = result.replace(/\shttp-port=?[^\s]+/g, '\r\nhttp-port=8888');
+
+        result = result.replace(/\s#http-password?[^\s]+/g, '\r\nhttp-password=');
+        result = result.replace(/\shttp-password=?[^\s]+/g, '\r\nhttp-password=vlcrc');
+
+        result = result.replace(/\s#extraintf?[^\s]+/g, '\r\nextraintf=');
+        result = result.replace(/\sextraintf=?[^\s]+/g, '\r\nextraintf=http');
+
+        fs.writeFile(configPath, result, 'utf8', async (error) => {
+          if (error) {
+            reject(error);
+          } else {
+            try {
+              await Database.writeSetting({
+                key: 'vlcInstalled',
+                value: true
+              });
+              await Database.writeSetting({
+                key: 'vlcConfigured',
+                value: true
+              });
+              console.log('VLC installed and configured');
+            } catch (e) {
+              console.log('Error setting VLC as installed and as configured', e);
+            }
+            resolve();
+          }
+        });
       });
-    });
+      return true;
+    }).catch(console.log);
   });
 }
 

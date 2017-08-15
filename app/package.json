@@ -1,7 +1,7 @@
 {
   "name": "tv-show-track",
   "productName": "TV Show Track",
-  "version": "0.1.5",
+  "version": "0.1.14",
   "description": "TV Show Track is an app to automatically set as viewed on Trakt.tv episodes that you watch on VLC and giving you the next one you have to see.",
   "main": "./main.prod.js",
   "author": {
@@ -12,5 +12,8 @@
   "scripts": {
     "postinstall": "npm rebuild --runtime=electron --target=1.6.6 --disturl=https://atom.io/download/atom-shell --build-from-source"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "castv2-client": "^1.2.0"
+  }
 }
