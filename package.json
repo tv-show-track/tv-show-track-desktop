@@ -62,10 +62,9 @@
       "target": [
         "pkg",
         "dmg",
-        "mas"
-      ],
-      "entitlements": "build/entitlements.mas.plist",
-      "entitlementsInherit": "build/entitlements.mas.inherit.plist"
+        "mas",
+        "mas-dev"
+      ]
     },
     "mas": {
       "category": "public.app-category.video"
