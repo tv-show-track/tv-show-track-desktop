@@ -2,9 +2,10 @@ import fs from 'fs';
 import os from 'os';
 import axios from 'axios';
 import xml2js from 'xml2js';
+import { spawn } from 'child_process'
+
 import * as _ from 'lodash';
 import { ipcMain } from 'electron';
-import getUsername from 'username'
 
 import Database from '../database';
 import { play, stop } from '../scrobbler';
@@ -34,79 +35,148 @@ ipcMain.on('is-vlc-configured', async (event) => {
   }
 });
 
-ipcMain.on('check-vlc', (event) => {
-  configureVlc()
-    .then(listenVlc)
-    .then(() => event.sender.send('vlc-checked'))
-    .catch(err => {
-      console.log('err', err);
-      // event.sender.send('vlc-configure-error', err);
+ipcMain.on('set-vlc-config-path', async (event, arg) => {
+  console.log('set-vlc-config-path', arg);
+  await Database.writeSetting({ key: 'vlcConfigPath', value: arg });
+
+  event.sender.send('vlc-config-path-setted');
+});
+
+ipcMain.on('check-vlc', async event => {
+  const vlcInstalled = await checkIfInstalled();
+  if (vlcInstalled) {
+    configureVlc()
+      .then(() => {
+        listenVlc();
+        event.sender.send('vlc-checked', {
+          installed: true,
+          configured: true
+        })
+      }, (err) => {
+        console.log('configureVlc err', err);
+        return event.sender.send('vlc-checked', {
+          installed: true,
+          configured: false,
+          configPathErr: err.configPathErr || false
+        })
+      })
+      .catch(err => {
+        console.log('catch err', err);
+        event.sender.send('vlc-checked', {
+          installed: true,
+          configured: false
+        });
+      });
+  } else {
+    await Database.writeSetting({
+      key: 'vlcInstalled',
+      value: false
     });
+    event.sender.send('vlc-checked', {
+      installed: false,
+      configured: false
+    });
+  }
 });
 
 function listenVlc() {
+  console.log('listenVlc')
   if (cancelIntervalInfos) {
     clearInterval(cancelIntervalInfos);
   }
   cancelIntervalInfos = setInterval(getMediaInfos, 1000);
 }
 
-function configureVlc() {
-  let configPath;
+function checkIfInstalled() {
+  return new Promise((resolve) => {
+    const sp = spawn('system_profiler', ['-xml', 'SPApplicationsDataType']);
 
-  return new Promise((resolve, reject) => {
-    getUsername().then(username => {
-      switch (os.platform()) {
-        default:
-        case 'darwin':
-          configPath = `/Users/${username}/Library/Preferences/org.videolan.vlc/vlcrc`;
-          break;
-      }
+    let profile = '';
 
-      fs.readFile(configPath, 'utf8', (err, data) => {
-        if (err) {
-          console.log('Error reading vlc config file', err);
-          Database.writeSetting({
-            key: 'vlcInstalled',
-            value: false
-          });
-          return reject(err);
+    sp.stdout.setEncoding('utf8');
+    sp.stdout.on('data', data => {
+      profile += data;
+    });
+
+    sp.stderr.on('data', data => {
+      console.log(`stderr: ${data}`);
+    });
+
+    sp.on('close', code => {
+      console.log(`child process exited with code ${code}`);
+    });
+
+    sp.stdout.on('end', () => {
+      xml2js.parseString(profile, (err, result) => {
+        const vlcSearch = _.get(result, 'plist.array[0].dict[0].array[1].dict');
+        for (let i = 0; i < vlcSearch.length; i += 1) {
+          console.log('item', _.get(vlcSearch[i], 'string[0]'));
+          if (_.get(vlcSearch[i], 'string[0]') === 'VLC') {
+            resolve(true);
+            break;
+          }
         }
+        resolve(false);
+      });
+    });
+  });
+}
 
-        console.log('Reading VLC config file...', configPath);
-
-        let result = data.replace(/\s#http-port?[^\s]+/g, '\r\nhttp-port=');
-        result = result.replace(/\shttp-port=?[^\s]+/g, '\r\nhttp-port=8888');
-
-        result = result.replace(/\s#http-password?[^\s]+/g, '\r\nhttp-password=');
-        result = result.replace(/\shttp-password=?[^\s]+/g, '\r\nhttp-password=vlcrc');
-
-        result = result.replace(/\s#extraintf?[^\s]+/g, '\r\nextraintf=');
-        result = result.replace(/\sextraintf=?[^\s]+/g, '\r\nextraintf=http');
-
-        fs.writeFile(configPath, result, 'utf8', async (error) => {
-          if (error) {
-            reject(error);
+function configureVlc() {
+  console.log('configureVlc')
+  return new Promise(async (resolve, reject) => {
+    const res = await Database.getSetting({ key: 'vlcConfigPath' });
+    if (res && res.value) {
+      const configPath = res.value;
+      try {
+        fs.readFile(configPath, 'utf8', (err, data) => {
+          if (err) {
+            console.log('Error reading vlc config file', err);
+            Database.writeSetting({
+              key: 'vlcInstalled',
+              value: false
+            });
+            reject({ configPathErr: false });
           } else {
-            try {
-              await Database.writeSetting({
-                key: 'vlcInstalled',
-                value: true
-              });
-              await Database.writeSetting({
-                key: 'vlcConfigured',
-                value: true
-              });
-              console.log('VLC installed and configured');
-            } catch (e) {
-              console.log('Error setting VLC as installed and as configured', e);
-            }
-            resolve();
+            console.log('Reading VLC config file...', configPath);
+
+            let result = data.replace(/\s#http-port?[^\s]+/g, '\r\nhttp-port=');
+            result = result.replace(/\shttp-port=?[^\s]+/g, '\r\nhttp-port=8888');
+
+            result = result.replace(/\s#http-password?[^\s]+/g, '\r\nhttp-password=');
+            result = result.replace(/\shttp-password=?[^\s]+/g, '\r\nhttp-password=vlcrc');
+
+            result = result.replace(/\s#extraintf?[^\s]+/g, '\r\nextraintf=');
+            result = result.replace(/\sextraintf=?[^\s]+/g, '\r\nextraintf=http');
+
+            fs.writeFile(configPath, result, 'utf8', async (error) => {
+              if (error) {
+                throw new Error(error);
+              } else {
+                try {
+                  await Database.writeSetting({
+                    key: 'vlcInstalled',
+                    value: true
+                  });
+                  await Database.writeSetting({
+                    key: 'vlcConfigured',
+                    value: true
+                  });
+                  console.log('VLC installed and configured');
+                } catch (e) {
+                  console.log('Error setting VLC as installed and as configured', e);
+                }
+                resolve();
+              }
+            });
           }
         });
-      });
-      return true;
-    }).catch(console.log);
+      } catch (err) {
+        reject();
+      }
+    } else {
+      reject({ configPathErr: true });
+    }
   });
 }
 

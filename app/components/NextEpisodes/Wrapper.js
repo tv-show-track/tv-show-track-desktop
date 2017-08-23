@@ -15,10 +15,27 @@ const Wrapper = styled.div`
     border-top: 1px solid rgb(28, 31, 35);
 
     .next-episode {
-      text-align: center;
-      padding: 4px 0;
+      display: flex;
+      padding: 4px 10px;
       font-size: 14px;
       background: linear-gradient(rgb(29, 35, 45), rgb(28, 31, 35));
+
+      .episode-title {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-right: -47px;
+      }
+
+      .set-episode-as-viewed {
+        width: 47px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
     }
 
     .connect-first {

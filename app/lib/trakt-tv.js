@@ -3,6 +3,7 @@ import Trakt from 'trakt.tv';
 import TraktMatcher from 'trakt.tv-matcher';
 import TraktImages from 'trakt.tv-images';
 import _ from 'lodash';
+import moment from 'moment';
 
 import { listenVlc } from './listeners/vlc';
 import Database from './database';
@@ -30,6 +31,17 @@ ipcMain.on('is-trakt-connected', isTraktConnected);
 ipcMain.on('connect-trakt', connectTrakt);
 ipcMain.on('disconnect-trakt', disconnectTrakt);
 ipcMain.on('get-calendar', getCalendar);
+ipcMain.on('set-as-viewed', setAsViewed);
+
+async function setAsViewed(event, ids) {
+  const post = {};
+  const item = { ids };
+  post.episodes = [item];
+
+  await trakt.sync.history.add(post);
+
+  event.sender.send('setted-as-viewed');
+}
 
 function setTraktVideoAsViewed(video) {
   const post = {};
@@ -75,21 +87,29 @@ async function isTraktConnected(event) {
 }
 
 async function getCalendar(event) {
-  await reAuthTrakt();
-  const history = await trakt.sync.history.get();
-  const filteredRes = _.uniqBy(history, e => e.show && e.show.ids.trakt);
-  for (const e of filteredRes) {
-    if (e && e.show) {
-      e.progress = await trakt.shows.progress.watched({ id: e.show.ids.trakt });
-    }
-  }
-  let res = _.filter(filteredRes, { action: 'watch' });
-  res = _.map(res, e => ({
-    episode: e.progress.next_episode,
-    show: e.show,
-  }));
+  try {
+    await reAuthTrakt();
+    const sixMonthAgo = moment().subtract(6, 'months');
+    const history = await trakt.sync.history.get({ type: 'shows', start_at: sixMonthAgo.format() });
 
-  event.sender.send('calendar', res);
+    const uniqHistory = _.uniqBy(history, e => e.show && e.show.ids.trakt);
+
+    let nextEpisodes = await Promise.all(uniqHistory.map(async watch => {
+      const progress = await trakt.shows.progress.watched({ id: watch.show.ids.trakt });
+
+      if (progress && progress.next_episode) {
+        const result = progress.next_episode;
+        result.show = watch.show;
+        return result;
+      }
+    }));
+
+    nextEpisodes = nextEpisodes.filter(el => el);
+
+    event.sender.send('calendar', nextEpisodes);
+  } catch (err) {
+    console.log('error getting calendar', err);
+  }
 }
 
 function reAuthTrakt() {
@@ -101,6 +121,8 @@ function reAuthTrakt() {
     }
 
     return false;
+  }).catch(e => {
+    console.log('error re-authenticating trakt.tv', e);
   });
 }
 
@@ -128,7 +150,6 @@ async function authTrakt(event) {
       }
     }
   } catch (err) {
-    console.log('err', err);
     const errMsg = 'Trakt.tv api is actually unreachable or encounter an issue so please retry later.';
     event.sender.send('connect-trakt-error', errMsg);
   }
@@ -147,9 +168,8 @@ async function getTraktImages(video) {
   request.type = 'show';
   request.imdb_id = video.show.ids.imdb;
   request.tvdb_id = video.show.ids.tvdb;
-  console.log('request');
   const images = await trakt.images.get(request);
-  console.log('images', images);
+
   return images;
 }
 

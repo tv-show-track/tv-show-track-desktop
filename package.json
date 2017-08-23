@@ -1,7 +1,7 @@
 {
   "name": "tv-show-track",
   "productName": "TV Show Track",
-  "version": "0.1.14",
+  "version": "0.1.17",
   "description": "TV Show Track is an app to automatically set as viewed on Trakt.tv episodes that you watch on VLC and giving you the next one you have to see.",
   "scripts": {
     "build": "concurrently \"npm run build-main\" \"npm run build-renderer\"",
@@ -67,7 +67,9 @@
       ]
     },
     "mas": {
-      "category": "public.app-category.video"
+      "category": "public.app-category.video",
+      "entitlements": "build/entitlements.mas.plist",
+      "entitlementsInherit": "build/entitlements.mas.inherit.plist"
     },
     "win": {
       "target": [
@@ -211,7 +213,9 @@
     "history": "^4.6.3",
     "hoxy": "^3.2.2",
     "http-proxy": "^1.16.2",
+    "jsonpath": "^0.2.12",
     "lodash": "^4.17.4",
+    "moment": "^2.18.1",
     "nedb": "^1.8.0",
     "q": "^1.5.0",
     "react": "^15.6.1",
@@ -221,6 +225,7 @@
     "react-router": "^4.1.1",
     "react-router-dom": "^4.1.1",
     "react-router-redux": "^5.0.0-alpha.6",
+    "react-tabs": "^1.1.0",
     "redux": "^3.7.1",
     "redux-thunk": "^2.2.0",
     "sanitize.css": "^5.0.0",
@@ -230,7 +235,8 @@
     "trakt.tv": "^5.1.0",
     "trakt.tv-images": "^5.1.0",
     "trakt.tv-matcher": "^5.0.0",
-    "xml2js": "^0.4.17"
+    "username": "^3.0.0",
+    "xml2js": "^0.4.19"
   },
   "devEngines": {
     "node": ">=7.x",

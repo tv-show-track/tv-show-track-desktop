@@ -16,28 +16,39 @@ export default class Home extends Component {
 
     this.state = {
       video: {},
-      watchNext: []
+      watchNext: [],
+      warning: true
     };
 
+    ipcRenderer.on('calendar', (event, arg) => {
+      console.log('on calendar', arg);
+      if (arg) {
+        this.onNewWatchNext(arg);
+      }
+    });
+    console.log('get calendar');
+    ipcRenderer.send('get-calendar');
+  }
+
+  state = {
+    video: React.PropTypes.any,
+    watchNext: React.PropTypes.array,
+    warning: React.PropTypes.bool,
+  };
+
+  componentDidMount() {
     ipcRenderer.on('new-current-video', (event, arg) => {
       console.log('new-current-video', arg);
       this.onNewVideo(arg);
     });
     ipcRenderer.send('watch-current-video');
-  }
 
-  state = {
-    video: React.PropTypes.any,
-    watchNext: React.PropTypes.array
-  };
-
-  componentDidMount() {
-    ipcRenderer.on('calendar', (event, arg) => {
-      if (arg) {
-        this.onNewWatchNext(arg);
-      }
+    ipcRenderer.on('vlc-configured', () => {
+      this.setState({
+        warning: false
+      });
     });
-    ipcRenderer.send('get-calendar');
+    ipcRenderer.send('is-vlc-configured');
   }
 
   onNewVideo(video: any) {
@@ -56,6 +67,11 @@ export default class Home extends Component {
             <Link to="/settings" className="settings">
               <i className="fa fa-cog" aria-hidden="true" />
             </Link>
+            { this.state.warning &&
+              <Link to="/settings/1" className="settings-warning">
+                <i className="fa fa-exclamation-triangle" aria-hidden="true" />
+              </Link>
+            }
             <div className="title">
               <Title data-text="TV Show Track">TV Show Track</Title>
               <i>No video detected</i>

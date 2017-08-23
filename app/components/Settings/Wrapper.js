@@ -11,7 +11,7 @@ const Wrapper = styled.div`
   margin-bottom: 20px;
 
   .title {
-    min-height: 80px;
+    min-height: 60px;
     display: flex;
     flex-direction: column;
     justify-content: center;

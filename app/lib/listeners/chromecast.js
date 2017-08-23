@@ -50,9 +50,7 @@ function getMediaInfos(client) {
             if (session.displayName.indexOf('Videostream') > -1) {
               title = _.get(status, 'media.customData.title');
               position = _.get(status, 'currentTime', 0) / _.get(status, 'media.customData.duration', 0);
-            }
-
-            if (session.displayName.indexOf('NanoPlayer') > -1) {
+            } else {
               title = _.get(status, 'media.metadata.title');
               position = _.get(status, 'currentTime', 0) / _.get(status, 'media.duration', 0);
             }

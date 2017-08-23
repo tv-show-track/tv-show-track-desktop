@@ -11,7 +11,7 @@ export default () => (
   <App>
     <Switch>
       <Route path="/home" component={HomePage} />
-      <Route path="/settings" component={SettingsPage} />
+      <Route path="/settings/:tab?" component={SettingsPage} />
       <Route path="/connect-trakt" component={ConnectTraktPage} />
       <Route path="/first-time-config" component={FirstTimeConfigPage} />
     </Switch>
