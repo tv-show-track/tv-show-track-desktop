@@ -123,7 +123,6 @@ function checkIfInstalled() {
 }
 
 function configureVlc() {
-  console.log('configureVlc')
   return new Promise(async (resolve, reject) => {
     const res = await Database.getSetting({ key: 'vlcConfigPath' });
     if (res && res.value) {

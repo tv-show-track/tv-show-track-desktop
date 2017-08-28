@@ -15,7 +15,7 @@ import { app, BrowserWindow, Tray, nativeImage, ipcMain } from 'electron';
 import Positioner from 'electron-positioner';
 import MenuBuilder from './menu';
 import Database, { checkIfValidProviders } from './lib/database';
-import { watchConf, isConfigured } from './lib/listeners/configuration';
+import { watchConf } from './lib/listeners/configuration';
 import { init as initScrobbler } from './lib/scrobbler';
 import { configureVlc, listenVlc } from './lib/listeners/vlc';
 import { listenChromeCast } from './lib/listeners/chromecast';
@@ -91,6 +91,10 @@ app.on('ready', async () => {
 });
 
 ipcMain.on('initialize-tracking', initializeTracking);
+ipcMain.on('online-status-changed', (event, isOnline) => {
+  console.log('online-status-changed', isOnline);
+  global.isOnline = isOnline;
+});
 
 /**
  * Methods
@@ -106,7 +110,7 @@ function initializeTracking() {
       configureVlc()
         .then(listenVlc)
         .catch(console.error);
-      listenChromeCast();
+      return listenChromeCast();
     })
     .catch(console.error);
 }

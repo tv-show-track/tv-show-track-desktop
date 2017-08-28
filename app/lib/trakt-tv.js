@@ -1,10 +1,11 @@
-import { clipboard, ipcMain, shell } from 'electron';
+import { clipboard, ipcMain } from 'electron';
 import Trakt from 'trakt.tv';
 import TraktMatcher from 'trakt.tv-matcher';
 import TraktImages from 'trakt.tv-images';
 import _ from 'lodash';
 import moment from 'moment';
 
+import { syncWatchedEpisodes } from './listeners';
 import { listenVlc } from './listeners/vlc';
 import Database from './database';
 import { setAsConfigured } from './listeners/configuration';
@@ -43,12 +44,20 @@ async function setAsViewed(event, ids) {
   event.sender.send('setted-as-viewed');
 }
 
-function setTraktVideoAsViewed(video) {
+function setEpisodeAsWatched(episode) {
   const post = {};
-  const item = { ids: { tvdb: video.episode.ids.tvdb } };
+  const item = { ids: { tvdb: episode.tvdb } };
   post.episodes = [item];
 
   return trakt.sync.history.add(post);
+}
+
+async function getHistory(startedAt) {
+  // const sixMonthAgo = moment().subtract(6, 'months');
+  const history = await trakt.sync.history.get({ type: 'episodes', limit: 100 });
+
+  const uniqHistory = _.uniqBy(history, e => e.episode && e.episode.ids.trakt);
+  return uniqHistory;
 }
 
 async function connectTrakt(event) {
@@ -70,6 +79,10 @@ async function disconnectTrakt(event) {
     key: 'isConfigured'
   });
 
+  await Database.deleteSetting({
+    key: 'authTraktTv'
+  });
+
   event.sender.send('trakt-disconnected');
 }
 
@@ -79,7 +92,7 @@ async function isTraktConnected(event) {
   });
   const isConnected = res && res.value;
 
-  if (isConnected) {
+  if (event && isConnected) {
     event.sender.send('trakt-connected');
   }
 
@@ -89,8 +102,7 @@ async function isTraktConnected(event) {
 async function getCalendar(event) {
   try {
     await reAuthTrakt();
-    const sixMonthAgo = moment().subtract(6, 'months');
-    const history = await trakt.sync.history.get({ type: 'shows', start_at: sixMonthAgo.format() });
+    const history = await trakt.sync.history.get({ type: 'shows', limit: 1000 });
 
     const uniqHistory = _.uniqBy(history, e => e.show && e.show.ids.trakt);
 
@@ -117,7 +129,8 @@ function reAuthTrakt() {
     key: 'authTraktTv'
   }).then(res => {
     if (res && res.value && res.value.access_token) {
-      return trakt.import_token(res.value);
+      return trakt.import_token(res.value)
+        .then(() => (onReady()));
     }
 
     return false;
@@ -140,6 +153,8 @@ async function authTrakt(event) {
 
       const auth = await trakt.poll_access(poll);
 
+      onReady(true);
+
       if (auth && event) {
         await Database.writeSetting({
           key: 'authTraktTv',
@@ -153,6 +168,10 @@ async function authTrakt(event) {
     const errMsg = 'Trakt.tv api is actually unreachable or encounter an issue so please retry later.';
     event.sender.send('connect-trakt-error', errMsg);
   }
+}
+
+function onReady() {
+  syncWatchedEpisodes('trakt');
 }
 
 async function matchTraktVideo(videoName) {
@@ -174,8 +193,10 @@ async function getTraktImages(video) {
 }
 
 export {
+  isTraktConnected,
   authTrakt,
   getTraktImages,
   matchTraktVideo,
-  setTraktVideoAsViewed
+  setEpisodeAsWatched,
+  getHistory
 };

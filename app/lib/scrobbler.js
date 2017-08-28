@@ -2,9 +2,12 @@ import { ipcMain } from 'electron';
 
 import {
   getTraktImages,
-  matchTraktVideo,
-  setTraktVideoAsViewed
+  matchTraktVideo
 } from './trakt-tv';
+
+import {
+  setEpisodeAsWatched
+} from './listeners';
 
 let watchNotificationEvent;
 let watchNewVideoEvent;
@@ -30,7 +33,6 @@ function init() {
 }
 
 async function play(status) {
-  console.log('playing', status);
   const { position, provider } = status;
   let { title } = status;
 
@@ -54,9 +56,7 @@ async function play(status) {
             setTimeout(() => reject(new Error('timeout')), 2000)
           )
         ])
-        .catch(e => {
-          console.log('Error getting img', e);
-        });
+        .catch(e => { console.log('Error getting img', e); });
 
         if (res) {
           images = res;
@@ -70,22 +70,25 @@ async function play(status) {
       }
     }
 
-
-    if (currentMedia && position > 0.80 && !currentMedia.viewed) {
-      setTraktVideoAsViewed(currentMedia)
-        .then(() => {
-          currentMedia.viewed = true;
-          const twoDigits = nb => ((`0${nb}`).slice(-2));
-          if (watchNotificationEvent) {
-            watchNotificationEvent.sender.send('notification', {
-              title: `${currentMedia.title} ${currentMedia.episode.season}x${twoDigits(currentMedia.episode.number)}`,
-              body: 'Episode set as viewed on trakt.tv!'
-            });
-          }
-          currentMedia = null;
-          return true;
-        })
-        .catch(console.log);
+    if (currentMedia && currentMedia.episode && position > 0.80 && !currentMedia.viewed) {
+      currentMedia.viewed = true;
+      const episode = currentMedia.episode;
+      const show = currentMedia.show;
+      try {
+        await setEpisodeAsWatched(episode, show);
+        const twoDigits = nb => ((`0${nb}`).slice(-2));
+        if (watchNotificationEvent) {
+          watchNotificationEvent.sender.send('notification', {
+            title: `${currentMedia.title} ${currentMedia.episode.season}x${twoDigits(currentMedia.episode.number)}`,
+            body: 'Episode set as viewed!'
+          });
+        }
+        currentMedia = null;
+        return true;
+      } catch (e) {
+        currentMedia.viewed = false;
+        console.log(e);
+      }
     }
   } else {
     if (currentTitle) {

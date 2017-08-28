@@ -56,7 +56,7 @@ export default class NextEpisodes extends Component {
             ))
           }
           { !this.state.connected &&
-            <i className="connect-first"><a onClick={() => history.push('/settings')}>Connect your Trakt.tv account</a> to see next episodes</i>
+            <i className="connect-first"><a onClick={() => history.push('/settings/2')}>Connect your Trakt.tv account</a> to see next episodes</i>
           }
         </div>
       </Wrapper>
