@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { fs as fsp } from 'mz';
 import os from 'os';
 import axios from 'axios';
 import xml2js from 'xml2js';
@@ -27,23 +28,83 @@ ipcMain.on('is-vlc-installed', async (event) => {
   }
 });
 
-ipcMain.on('is-vlc-configured', async (event) => {
-  const res = await Database.getSetting({ key: 'vlcConfigured' });
+ipcMain.on('is-vlc-installed-and-configured', async (event) => {
+  const vlcInstalled = await checkIfInstalled();
+  const resConfigPath = await Database.getSetting({ key: 'vlcConfigPath' });
+  const resConfigured = await Database.getSetting({ key: 'vlcConfigured' });
 
-  if (res && res.value) {
-    event.sender.send('vlc-configured');
+  let vlcConfigured = false;
+  if (
+    vlcInstalled &&
+    resConfigPath && resConfigPath.value &&
+    resConfigured && resConfigured.value
+  ) {
+    try {
+      await new Promise((resolve, reject) => {
+        try {
+          fs.readFile(resConfigPath.value, (err, buffer) => {
+            if (err) reject(err); else resolve(buffer);
+          });
+        } catch (err) {
+          reject(err);
+        }
+      });
+      vlcConfigured = true;
+    } catch (e) {
+      await Database.deleteSetting({ key: 'vlcConfigPath' });
+      await Database.writeSetting({ key: 'vlcConfigured', value: false });
+    }
   }
+
+  event.sender.send('vlc-installed-and-configured', { vlcInstalled, vlcConfigured });
+});
+
+ipcMain.on('is-vlc-installed', async (event) => {
+  const vlcInstalled = await checkIfInstalled();
+
+  event.sender.send('vlc-installed', vlcInstalled);
+});
+
+ipcMain.on('is-vlc-configured', async (event) => {
+  const vlcInstalled = await checkIfInstalled();
+  const resConfigPath = await Database.getSetting({ key: 'vlcConfigPath' });
+  const resConfigured = await Database.getSetting({ key: 'vlcConfigured' });
+
+  let isConfigured = false;
+  if (
+    vlcInstalled &&
+    resConfigPath && resConfigPath.value &&
+    resConfigured && resConfigured.value
+  ) {
+    try {
+      await new Promise((resolve, reject) => {
+        try {
+          fs.readFile(resConfigPath.value, (err, buffer) => {
+            if (err) reject(err); else resolve(buffer);
+          });
+        } catch (err) {
+          reject(err);
+        }
+      });
+      isConfigured = true;
+    } catch (e) {
+      await Database.writeSetting({ key: 'vlcConfigured', value: false });
+    }
+  }
+
+  event.sender.send('vlc-configured', isConfigured);
 });
 
 ipcMain.on('set-vlc-config-path', async (event, arg) => {
-  console.log('set-vlc-config-path', arg);
   await Database.writeSetting({ key: 'vlcConfigPath', value: arg });
 
   event.sender.send('vlc-config-path-setted');
 });
 
-ipcMain.on('check-vlc', async event => {
+ipcMain.on('check-vlc', async (event, readOnly) => {
+  console.log('check-vlc', readOnly);
   const vlcInstalled = await checkIfInstalled();
+  console.log('vlcInstalled', vlcInstalled);
   if (vlcInstalled) {
     configureVlc()
       .then(() => {
@@ -51,17 +112,15 @@ ipcMain.on('check-vlc', async event => {
         event.sender.send('vlc-checked', {
           installed: true,
           configured: true
-        })
+        });
       }, (err) => {
-        console.log('configureVlc err', err);
         return event.sender.send('vlc-checked', {
           installed: true,
           configured: false,
           configPathErr: err.configPathErr || false
-        })
+        });
       })
       .catch(err => {
-        console.log('catch err', err);
         event.sender.send('vlc-checked', {
           installed: true,
           configured: false
@@ -109,11 +168,12 @@ function checkIfInstalled() {
     sp.stdout.on('end', () => {
       xml2js.parseString(profile, (err, result) => {
         const vlcSearch = _.get(result, 'plist.array[0].dict[0].array[1].dict');
-        for (let i = 0; i < vlcSearch.length; i += 1) {
-          console.log('item', _.get(vlcSearch[i], 'string[0]'));
-          if (_.get(vlcSearch[i], 'string[0]') === 'VLC') {
-            resolve(true);
-            break;
+        if (vlcSearch) {
+          for (let i = 0; i < vlcSearch.length; i += 1) {
+            if (_.get(vlcSearch[i], 'string[0]') === 'VLC') {
+              resolve(true);
+              break;
+            }
           }
         }
         resolve(false);
@@ -132,7 +192,7 @@ function configureVlc() {
           if (err) {
             console.log('Error reading vlc config file', err);
             Database.writeSetting({
-              key: 'vlcInstalled',
+              key: 'vlcConfigured',
               value: false
             });
             reject({ configPathErr: false });
@@ -171,6 +231,10 @@ function configureVlc() {
           }
         });
       } catch (err) {
+        Database.writeSetting({
+          key: 'vlcConfigured',
+          value: false
+        });
         reject();
       }
     } else {

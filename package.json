@@ -1,7 +1,7 @@
 {
   "name": "tv-show-track",
   "productName": "TV Show Track",
-  "version": "0.1.17",
+  "version": "0.2.0",
   "description": "TV Show Track is an app to automatically set as viewed on Trakt.tv episodes that you watch on VLC and giving you the next one you have to see.",
   "scripts": {
     "build": "concurrently \"npm run build-main\" \"npm run build-renderer\"",
@@ -216,6 +216,7 @@
     "jsonpath": "^0.2.12",
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
+    "mz": "^2.6.0",
     "nedb": "^1.8.0",
     "q": "^1.5.0",
     "react": "^15.6.1",

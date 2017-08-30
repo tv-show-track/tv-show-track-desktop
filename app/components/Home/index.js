@@ -17,7 +17,7 @@ export default class Home extends Component {
     this.state = {
       video: {},
       watchNext: [],
-      warning: true
+      warning: false
     };
 
     ipcRenderer.on('calendar', (event, arg) => {
@@ -43,12 +43,16 @@ export default class Home extends Component {
     });
     ipcRenderer.send('watch-current-video');
 
-    ipcRenderer.on('vlc-configured', () => {
+    ipcRenderer.on('vlc-configured', (event, isConfigured) => {
+      console.log('vlc-configured', isConfigured);
       this.setState({
-        warning: false
+        warning: !isConfigured
       });
     });
     ipcRenderer.send('is-vlc-configured');
+    setInterval(() => {
+      ipcRenderer.send('is-vlc-configured');
+    }, 10 * 1000);
   }
 
   onNewVideo(video: any) {

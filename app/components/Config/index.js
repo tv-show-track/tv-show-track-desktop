@@ -7,8 +7,11 @@ import { history } from '../../store/configureStore';
 
 import Wrapper from './Wrapper';
 import Button from '../Button';
+import Switch from '../Switch';
 import ConnectTraktButton from '../ConnectTraktButton';
 import vlcLogo from '../../assets/vlc.png';
+
+const { app } = remote;
 
 export default class Config extends Component {
 
@@ -20,13 +23,16 @@ export default class Config extends Component {
   }
 
   constructor() {
+    const { openAtLogin } = app.getLoginItemSettings();
+
     super();
 
     this.state = {
       vlcConfigured: false,
       vlcInstalled: false,
       vlcCheckLoading: false,
-      tabIndex: 0
+      tabIndex: 0,
+      launchAtStartup: openAtLogin
     };
   }
 
@@ -34,11 +40,17 @@ export default class Config extends Component {
     vlcConfigured: React.PropTypes.bool,
     vlcInstalled: React.PropTypes.bool,
     vlcCheckLoading: React.PropTypes.bool,
-    tabIndex: React.PropTypes.number
+    tabIndex: React.PropTypes.number,
+    launchAtStartup: React.PropTypes.bool,
   }
 
   componentDidMount() {
-    this.checkVLC();
+    ipcRenderer.on('vlc-installed-and-configured', (event, res) => {
+      this.setState(res);
+      this.setState({ vlcCheckLoading: false });
+    });
+    ipcRenderer.send('is-vlc-installed-and-configured');
+    this.setState({ vlcCheckLoading: true });
     this.onMount();
   }
 
@@ -85,6 +97,16 @@ export default class Config extends Component {
     }).catch(console.error);
   }
 
+  onLaunchAtStartupChange() {
+    const { openAtLogin } = app.getLoginItemSettings();
+    const isOpen = !openAtLogin;
+    app.setLoginItemSettings({
+      openAtLogin: isOpen
+    });
+    this.setState({ launchAtStartup: isOpen });
+    // console.log('onLaunchAtStartupChange', this.state.launchAtStartup);
+  }
+
   render() {
     return (
       <Wrapper>
@@ -99,6 +121,18 @@ export default class Config extends Component {
           </TabList>
 
           <TabPanel>
+            <div className="general">
+              <Switch htmlFor="launchAtStartup" className="switch-align-right">
+                Launch app at startup
+                <input
+                  id="launchAtStartup"
+                  type="checkbox"
+                  checked={this.state.launchAtStartup}
+                  onChange={() => this.onLaunchAtStartupChange()}
+                />
+                <span className="indicator" />
+              </Switch>
+            </div>
             <Button onClick={() => Config.resetSettings()}>Reset Settings</Button>
           </TabPanel>
           <TabPanel>

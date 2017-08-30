@@ -41,6 +41,7 @@ const Wrapper = styled.div`
       background-color: white;
       padding: 4px 10px;
       letter-spacing: 2px;
+      -webkit-user-select: text;
     }
 
     i {

@@ -1,9 +1,11 @@
 import styled from 'styled-components';
 
 const Wrapper = styled.div`
-  flex: 1;
+  position: absolute;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  max-height: 60vh;
+  height: 160px;
   display: flex;
   flex-direction: column;
 
@@ -13,9 +15,12 @@ const Wrapper = styled.div`
     overflow-y: auto;
     background-color: rgb(28, 31, 35);
     border-top: 1px solid rgb(28, 31, 35);
+    border-bottom: 1px solid rgb(28, 31, 35);
 
     .next-episode {
       display: flex;
+      min-height: 30px;
+      max-height: 30px;
       padding: 4px 10px;
       font-size: 14px;
       background: linear-gradient(rgb(29, 35, 45), rgb(28, 31, 35));
@@ -25,12 +30,19 @@ const Wrapper = styled.div`
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center;
-        margin-right: -47px;
+        -webkit-user-select: text;
+
+        & > div {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-align: center;
+        }
       }
 
+
       .set-episode-as-viewed {
-        width: 47px;
+        width: 50px;
         display: flex;
         flex-direction: column;
         justify-content: center;

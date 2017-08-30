@@ -52,8 +52,7 @@ function setEpisodeAsWatched(episode) {
   return trakt.sync.history.add(post);
 }
 
-async function getHistory(startedAt) {
-  // const sixMonthAgo = moment().subtract(6, 'months');
+async function getHistory() {
   const history = await trakt.sync.history.get({ type: 'episodes', limit: 100 });
 
   const uniqHistory = _.uniqBy(history, e => e.episode && e.episode.ids.trakt);

@@ -9,13 +9,12 @@ export default class App extends Component {
     children: Children
   };
 
-  static isConfigured() {
-    // if (arg) {
-    //   history.push('/home');
-    // } else {
-    //   history.push('/first-time-config');
-    // }
-    history.push('/home');
+  static isConfigured(event, arg) {
+    if (arg) {
+      history.push('/home');
+    } else {
+      history.push('/first-time-config');
+    }
   }
 
   static sendNotification(event, arg) {

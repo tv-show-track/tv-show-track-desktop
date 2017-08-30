@@ -3,8 +3,7 @@ import Database from '../database';
 import {
   isTraktConnected,
   getHistory,
-  setEpisodeAsWatched as setTracktEpisodeAsWatched,
-  matchTraktVideo
+  setEpisodeAsWatched as setTracktEpisodeAsWatched
 } from '../trakt-tv';
 
 async function setEpisodeAsWatched(episode) {
@@ -27,10 +26,8 @@ async function setEpisodeAsWatchedOn3Parties(episode) {
   const traktConnected = await isTraktConnected();
 
   const episodeUpdated = episode;
-  let res;
   if (traktConnected) {
-    res = await setTracktEpisodeAsWatched(episode);
-    console.log('setEpisodeAsWatchedOn3Parties trakt', episode, res)
+    await setTracktEpisodeAsWatched(episode);
     episodeUpdated.syncProvider = 'trakt';
   }
 
@@ -51,7 +48,6 @@ async function syncWatchedEpisodes(provider) {
 
 async function syncFromLocalTo3Parties(provider) {
   const nonSyncedEpisodes = await Database.getWatchedNotSynced(provider);
-  console.log('nonSyncedEpisodes', nonSyncedEpisodes);
   for (const nonSyncedEpisode of nonSyncedEpisodes) {
     setEpisodeAsWatchedOn3Parties(nonSyncedEpisode)
   }

@@ -21,6 +21,10 @@ const Wrapper = styled.div`
       .react-tabs__tab {
         padding: 4px 10px;
 
+        &:hover {
+          cursor: pointer;
+        }
+
         &.react-tabs__tab--selected {
           border-bottom: 2px solid white;
         }
@@ -30,11 +34,16 @@ const Wrapper = styled.div`
     .react-tabs__tab-panel {
       flex: initial;
 
-
       &.react-tabs__tab-panel--selected {
         flex: 1;
+        display: flex;
+        flex-direction: column;
       }
     }
+  }
+
+  .general {
+    flex: 1;
   }
 
   .vlc {

@@ -142,7 +142,6 @@ const Database = {
     }));
     const syncedQuery = promisifyDb(db.watched.find({ syncProvider }));
     const [notSynced, synced] = await Promise.all([notSyncedQuery, syncedQuery]);
-    console.log('getWatchedNotSynced', notSynced, synced);
 
     _.remove(notSynced, ns => (_.find(synced, s => (s.tvdb === ns.tvdb && s.date > ns.date))));
     return notSynced;
