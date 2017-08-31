@@ -45,12 +45,7 @@ export default class Config extends Component {
   }
 
   componentDidMount() {
-    ipcRenderer.on('vlc-installed-and-configured', (event, res) => {
-      this.setState(res);
-      this.setState({ vlcCheckLoading: false });
-    });
-    ipcRenderer.send('is-vlc-installed-and-configured');
-    this.setState({ vlcCheckLoading: true });
+    this.checkVLC();
     this.onMount();
   }
 

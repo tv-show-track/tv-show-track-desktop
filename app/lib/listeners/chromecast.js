@@ -71,4 +71,4 @@ function getMediaInfos(client) {
   }
 }
 
-export { listenChromeCast }
+export { listenChromeCast };
