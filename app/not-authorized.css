@@ -1,0 +1,101 @@
+@import 'https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/5.0.0/sanitize.min.css';
+
+body {
+  position: relative;
+  margin: 20px;
+  color: white;
+  height: 100vh;
+  background-color: #232c39;
+  font-family: Arial, Helvetica, Helvetica Neue, serif;
+  overflow-y: hidden;
+   -webkit-user-select: none;
+   text-align: center;
+}
+
+h2 {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: bold;
+  letter-spacing: -0.025em;
+  background: linear-gradient(90deg, #FF9A8B 0%, #FF6A88 55%, #FF99AC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+li {
+  list-style: none;
+}
+
+a {
+  color: white;
+  opacity: 0.75;
+  text-decoration: none;
+}
+
+.group {
+  background: white;
+  box-shadow: 0 7px 14px 0 rgba(196, 7, 255, 0.07),
+    0 3px 6px 0 rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  margin-bottom: 26px;
+}
+
+.group label {
+  position: relative;
+  color: #8898aa;
+  font-weight: 300;
+  height: 40px;
+  line-height: 40px;
+  margin-left: 8px;
+  display: block;
+
+}
+
+.group label > span {
+  width: 21%;
+  text-align: right;
+  float: left;
+  font-size: 0.8em;
+}
+
+.group  label:not(:last-child) {
+  border-bottom: 1px solid #f0f5fa;
+}
+
+.field {
+  background: transparent;
+  font-size: 0.8em;
+  font-weight: 300;
+  border: 0;
+  color: #31325f;
+  outline: none;
+  padding-right: 6px;
+  padding-left: 4px;
+  cursor: text;
+  width: 78%;
+  height: 40px;
+  float: right;
+}
+
+.field::placeholder {
+  font-size: 0.9em;
+  color: #cfd7e0;
+}
+
+button {
+  padding: 6px 20px;
+  border-radius: 20px;
+  border: 1px solid white;
+  color: white;
+  font-size: 0.9em;
+}
+
+button:hover {
+  background-color: white;
+  color: black;
+  cursor: pointer;
+}
+
+button:active, button:focus, button:focus:active {
+  outline: 0!important;
+}

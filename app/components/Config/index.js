@@ -45,7 +45,12 @@ export default class Config extends Component {
   }
 
   componentDidMount() {
-    this.checkVLC();
+    this.setState({ vlcCheckLoading: true });
+    ipcRenderer.on('vlc-installed-and-configured', (event, res) => {
+      this.setState(res);
+      this.setState({ vlcCheckLoading: false });
+    });
+    ipcRenderer.send('is-vlc-installed-and-configured');
     this.onMount();
   }
 
@@ -57,7 +62,6 @@ export default class Config extends Component {
 
   checkVLC() {
     ipcRenderer.on('vlc-checked', (event, arg) => {
-      console.log('vlc-checked', arg);
       if (arg) {
         this.setState({
           vlcConfigured: arg.configured,
@@ -155,7 +159,7 @@ export default class Config extends Component {
             { !this.state.vlcCheckLoading && this.state.vlcInstalled && this.state.vlcConfigured &&
               <div className="vlc">
                 <img src={vlcLogo} alt="vcl logo" width="30px" />
-                <i>VLC is installed and configured !</i>
+                <i>VLC is installed and configured !  <a onClick={() => this.checkVLC()}>Re-check</a></i>
               </div>
             }
           </TabPanel>

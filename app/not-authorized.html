@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>TV Show Track</title>
+    <link rel="stylesheet" type="text/css" href="./not-authorized.css">
+  </head>
+  <body>
+    <h2>License</h2>
+    <p>
+      It seems that you are using TV Show Track without license key.
+    </p>
+    <div class="group">
+      <label htmlFor="firstName">
+        <span>License Key</span>
+        <input
+          id="licenseKey"
+          class="field"
+          type="text"
+          placeholder="Your personal license key"
+        ></input>
+      </label>
+    </div>
+    <button id="addLicense">Validate License</button>
+    <p>You can buy one here: <br /><a href="" id="openStore">https://tv-show-track.com/store</a></p>
+    <script>
+      const { ipcRenderer } = require('electron')
+      const licenseElem = document.querySelector('#licenseKey')
+      const addLicenseButton = document.querySelector('#addLicense')
+      const openStoreLink = document.querySelector('#openStore')
+
+      addLicenseButton.addEventListener('click', () => {
+        ipcRenderer.on('license-key-saved', (event, arg) => {
+          console.log('arg', arg)
+          if (arg) {
+            licenseElem.disabled = true
+            addLicenseButton.disabled = true
+            addLicenseButton.innerHTML = 'License valid and saved!'
+            ipcRenderer.send('license-added')
+          }
+        })
+        ipcRenderer.send('save-license-key', licenseElem.value)
+      })
+
+      openStoreLink.addEventListener('click', () => {
+        const { shell } = require('electron')
+        shell.openExternal('https://tv-show-track.com/store')
+      })
+    </script>
+  </body>
+</html>

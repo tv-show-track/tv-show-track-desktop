@@ -21,12 +21,10 @@ export default class Home extends Component {
     };
 
     ipcRenderer.on('calendar', (event, arg) => {
-      console.log('on calendar', arg);
       if (arg) {
         this.onNewWatchNext(arg);
       }
     });
-    console.log('get calendar');
     ipcRenderer.send('get-calendar');
   }
 

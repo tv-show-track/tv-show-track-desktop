@@ -35,7 +35,7 @@ function dbInit(name) {
   promisifyDatastore(db[name]);
 }
 
-const dbNames = ['settings', 'watched'];
+const dbNames = ['settings', 'watched', 'license'];
 dbNames.map(dbInit);
 
 // settings key uniqueness
@@ -55,9 +55,6 @@ db.watched.ensureIndex({
 });
 
 const Database = {
-  initialize: () => (
-    new Promise((resolve) => resolve())
-  ),
 
   deleteDatabases: () => {
     fs.unlinkSync(path.join(DATA_PATH, 'data/settings.db'));
@@ -110,6 +107,51 @@ const Database = {
   ),
 
   /** ****************************
+   *******   License     ********
+   *******************************/
+
+  getLicense: data => (
+    promisifyDb(db.license.findOne({
+      key: data.key
+    }))
+  ),
+
+  deleteLicense: data => (
+    db.license.remove({
+      key: data.key
+    })
+  ),
+
+  getLicenses: () => promisifyDb(db.license.find({})),
+
+  writeLicense: data => (
+    Database.getLicense({
+      key: data.key
+    })
+    .then(result => {
+      if (result) {
+        return db.license.update({
+          key: data.key
+        }, {
+          $set: {
+            value: data.value
+          }
+        }, {
+          upsert: true
+        });
+      }
+      return db.license.insert(data);
+    })
+    .catch(console.log)
+  ),
+
+  resetLicense: () => (
+    db.license.remove({}, {
+      multi: true
+    })
+  ),
+
+  /** ****************************
    *******     SHOWS      ********
    *******************************/
 
@@ -147,19 +189,5 @@ const Database = {
     return notSynced;
   }
 };
-
-export function checkIfValidProviders() {
-  Database.getSetting({ key: 'authTraktTv' })
-    .then(doc => (
-      new Promise((resolve, reject) => {
-        if (doc && doc.value) {
-          resolve();
-        } else {
-          reject();
-        }
-      })
-    ))
-    .catch(console.error);
-}
 
 export default Database;

@@ -18,6 +18,7 @@ const Wrapper = styled.div`
     border-bottom: 1px solid rgb(28, 31, 35);
 
     .next-episode {
+      position: relative;
       display: flex;
       min-height: 30px;
       max-height: 30px;
@@ -25,12 +26,23 @@ const Wrapper = styled.div`
       font-size: 14px;
       background: linear-gradient(rgb(29, 35, 45), rgb(28, 31, 35));
 
+      &:hover {
+        .episode-title {
+          margin: 0 50px;
+        }
+
+        .set-episode-as-viewed {
+          display: flex;
+        }
+      }
+
       .episode-title {
         flex: 1;
         display: flex;
         flex-direction: column;
         justify-content: center;
         -webkit-user-select: text;
+        overflow: hidden;
 
         & > div {
           overflow: hidden;
@@ -42,8 +54,12 @@ const Wrapper = styled.div`
 
 
       .set-episode-as-viewed {
+        display: none;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
         width: 50px;
-        display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;

@@ -13,12 +13,19 @@
 import path from 'path';
 import { app, BrowserWindow, Tray, nativeImage, ipcMain } from 'electron';
 import Positioner from 'electron-positioner';
+import isOnline from 'is-online';
+import './lib/database';
 import MenuBuilder from './menu';
-import Database, { checkIfValidProviders } from './lib/database';
+import { isSandboxed } from './utils/apple';
+import { init as initLicensing, licenseKeyIsValid } from './lib/licensing';
 import { watchConf } from './lib/listeners/configuration';
 import { init as initScrobbler } from './lib/scrobbler';
-import { configureVlc, listenVlc } from './lib/listeners/vlc';
+import {
+  isConfigured as isVlcConfigured,
+  listenVlc
+} from './lib/listeners/vlc';
 import { listenChromeCast } from './lib/listeners/chromecast';
+// import { listenAppleTV } from './lib/listeners/apple-tv';
 
 
 if (process.env.NODE_ENV === 'production') {
@@ -68,6 +75,41 @@ app.on('ready', async () => {
   }
 
   setApplicationMenu();
+
+  checkLicense();
+});
+
+ipcMain.on('initialize-tracking', initializeTracking);
+ipcMain.on('online-status-changed', (event, statusIsOnline) => {
+  global.isOnline = statusIsOnline;
+});
+
+/**
+ * Methods
+ */
+async function checkLicense() {
+  console.log('checkLicense');
+  const webIsHere = await isOnline();
+  const validLicense = await licenseKeyIsValid();
+  console.log('validLicense', validLicense);
+
+  if (!isSandboxed() && webIsHere && !validLicense) {
+    isNotAuthorized();
+  } else {
+    isReady();
+  }
+}
+
+function isNotAuthorized() {
+  ipcMain.on('license-added', () => {
+    checkLicense();
+  });
+  initLicensing();
+  win.loadURL(`file://${__dirname}/not-authorized.html`);
+}
+
+function isReady() {
+  console.log('isReady');
   initializeTracking();
 
   win.loadURL(`file://${__dirname}/app.html`);
@@ -88,31 +130,18 @@ app.on('ready', async () => {
 
   const menuBuilder = new MenuBuilder(win);
   menuBuilder.buildMenu();
-});
+}
 
-ipcMain.on('initialize-tracking', initializeTracking);
-ipcMain.on('online-status-changed', (event, isOnline) => {
-  console.log('online-status-changed', isOnline);
-  global.isOnline = isOnline;
-});
-
-/**
- * Methods
- */
-
-function initializeTracking() {
+async function initializeTracking() {
   watchConf();
+  initScrobbler();
 
-  Database.initialize()
-    .then(checkIfValidProviders)
-    .then(initScrobbler)
-    .then(() => {
-      configureVlc()
-        .then(listenVlc)
-        .catch(console.error);
-      return listenChromeCast();
-    })
-    .catch(console.error);
+  const vlcConfigured = await isVlcConfigured();
+  if (vlcConfigured) {
+    listenVlc();
+  }
+
+  listenChromeCast();
 }
 
 function setApplicationMenu() {

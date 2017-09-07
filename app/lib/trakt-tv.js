@@ -3,7 +3,6 @@ import Trakt from 'trakt.tv';
 import TraktMatcher from 'trakt.tv-matcher';
 import TraktImages from 'trakt.tv-images';
 import _ from 'lodash';
-import moment from 'moment';
 
 import { syncWatchedEpisodes } from './listeners';
 import { listenVlc } from './listeners/vlc';

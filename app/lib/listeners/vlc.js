@@ -34,9 +34,16 @@ ipcMain.on('is-vlc-installed', async (event) => {
 });
 
 ipcMain.on('is-vlc-configured', async (event) => {
-  const res = await Database.getSetting({ key: 'vlcConfigured' });
+  const vlcIsConfigured = await isConfigured();
 
-  event.sender.send('vlc-configured', res && res.value);
+  event.sender.send('vlc-configured', vlcIsConfigured);
+});
+
+ipcMain.on('is-vlc-installed-and-configured', async (event) => {
+  const vlcInstalled = await checkIfInstalled();
+  const vlcConfigured = await isConfigured();
+
+  event.sender.send('vlc-installed-and-configured', { vlcInstalled, vlcConfigured });
 });
 
 ipcMain.on('set-vlc-config-path', async (event, arg) => {
@@ -45,7 +52,7 @@ ipcMain.on('set-vlc-config-path', async (event, arg) => {
   event.sender.send('vlc-config-path-setted');
 });
 
-ipcMain.on('check-vlc', async (event, readOnly) => {
+ipcMain.on('check-vlc', async (event) => {
   const vlcInstalled = await checkIfInstalled();
 
   if (vlcInstalled) {
@@ -81,8 +88,12 @@ ipcMain.on('check-vlc', async (event, readOnly) => {
   }
 });
 
+async function isConfigured() {
+  const res = await Database.getSetting({ key: 'vlcConfigured' });
+  return res && res.value;
+}
+
 function listenVlc() {
-  console.log('listenVlc')
   if (cancelIntervalInfos) {
     clearInterval(cancelIntervalInfos);
   }
@@ -209,4 +220,4 @@ async function getMediaInfos() {
   }
 }
 
-export { configureVlc, listenVlc };
+export { configureVlc, isConfigured, listenVlc };
