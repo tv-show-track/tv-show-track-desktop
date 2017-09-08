@@ -31,6 +31,12 @@
   },
   "browserslist": "electron 1.6",
   "build": {
+    "publish": {
+      "provider": "github",
+      "owner": "matthieuh",
+      "vPrefixedTagName": false,
+      "private": true
+    },
     "productName": "TV Show Track",
     "appId": "com.matthieuh.desktop.tvshowtrack",
     "files": [
@@ -38,6 +44,8 @@
       "node_modules/",
       "assets/",
       "app.html",
+      "not-authorized.html",
+      "not-authorized.css",
       "main.prod.js",
       "main.prod.js.map",
       "package.json"
@@ -63,7 +71,8 @@
         "pkg",
         "dmg",
         "mas",
-        "mas-dev"
+        "mas-dev",
+        "zip"
       ]
     },
     "mas": {
@@ -155,7 +164,7 @@
     "cross-spawn": "^5.1.0",
     "css-loader": "^0.28.3",
     "electron": "^1.6.10",
-    "electron-builder": "^19.19.1",
+    "electron-builder": "^19.28.1",
     "electron-devtools-installer": "^2.2.0",
     "enzyme": "^2.9.1",
     "enzyme-to-json": "^1.5.1",
@@ -207,11 +216,13 @@
     "airplayer": "^2.0.0",
     "axios": "^0.16.2",
     "bonjour": "^3.5.0",
+    "child-process-promise": "^2.2.1",
     "chrome-launcher": "^0.3.2",
     "chrome-remote-interface": "^0.24.2",
     "chromecast-scanner": "^0.5.0",
     "devtron": "^1.4.0",
     "electron-debug": "^1.2.0",
+    "electron-log": "^2.2.9",
     "electron-positioner": "^3.0.0",
     "font-awesome": "^4.7.0",
     "fs-jetpack": "^1.2.0",
@@ -223,6 +234,7 @@
     "jsonpath": "^0.2.12",
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
+    "ms": "^2.0.0",
     "mz": "^2.6.0",
     "nedb": "^1.8.0",
     "q": "^1.5.0",
@@ -237,6 +249,7 @@
     "redux": "^3.7.1",
     "redux-thunk": "^2.2.0",
     "sanitize.css": "^5.0.0",
+    "semver": "^5.4.1",
     "sha1": "^1.1.1",
     "shebang-loader": "^0.0.1",
     "source-map-support": "^0.4.15",
@@ -245,6 +258,7 @@
     "trakt.tv": "^5.1.0",
     "trakt.tv-images": "^5.1.0",
     "trakt.tv-matcher": "^5.0.0",
+    "trim": "^0.0.1",
     "username": "^3.0.0",
     "xml2js": "^0.4.19"
   },

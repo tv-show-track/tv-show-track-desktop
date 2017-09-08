@@ -12,8 +12,10 @@
  */
 import path from 'path';
 import { app, BrowserWindow, Tray, nativeImage, ipcMain } from 'electron';
+import log from 'electron-log';
 import Positioner from 'electron-positioner';
 import isOnline from 'is-online';
+import autoUpdater from './utils/updates';
 import './lib/database';
 import MenuBuilder from './menu';
 import { isSandboxed } from './utils/apple';
@@ -26,6 +28,10 @@ import {
 } from './lib/listeners/vlc';
 import { listenChromeCast } from './lib/listeners/chromecast';
 // import { listenAppleTV } from './lib/listeners/apple-tv';
+
+log.transports.file.level = 'info';
+log.transports.console.level = 'info';
+log.info('App starting...');
 
 
 if (process.env.NODE_ENV === 'production') {
@@ -106,10 +112,15 @@ function isNotAuthorized() {
   });
   initLicensing();
   win.loadURL(`file://${__dirname}/not-authorized.html`);
+  const menuBuilder = new MenuBuilder(win);
+  menuBuilder.buildMenu();
 }
 
 function isReady() {
-  console.log('isReady');
+  log.info('isReady');
+
+  autoUpdater(win);
+
   initializeTracking();
 
   win.loadURL(`file://${__dirname}/app.html`);

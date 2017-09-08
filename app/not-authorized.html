@@ -31,7 +31,6 @@
 
       addLicenseButton.addEventListener('click', () => {
         ipcRenderer.on('license-key-saved', (event, arg) => {
-          console.log('arg', arg)
           if (arg) {
             licenseElem.disabled = true
             addLicenseButton.disabled = true

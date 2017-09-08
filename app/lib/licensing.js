@@ -29,13 +29,17 @@ async function saveLicenseKey(event, licenseKey) {
 }
 
 async function licenseKeyIsValid() {
-  const res = await Database.getLicense({ key: 'licenseKey' });
-  if (res && res.value) {
-    const licenseKey = res.value;
-    return checkLicense(licenseKey);
-  }
+  try {
+    const res = await Database.getLicense({ key: 'licenseKey' });
+    if (res && res.value) {
+      const licenseKey = res.value;
+      return checkLicense(licenseKey);
+    }
 
-  return false;
+    return false;
+  } catch (e) {
+    return false;
+  }
 }
 
 async function checkLicense(licenseKey, addLicense) {
