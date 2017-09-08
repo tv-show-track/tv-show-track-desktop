@@ -2,23 +2,28 @@ import sha1 from 'sha1';
 import * as _ from 'lodash';
 import { ipcMain } from 'electron';
 import { request } from 'graphql-request';
+import log from 'electron-log';
 import si from 'systeminformation';
 import Database from './database';
 
-const graphqlEndpoint = 'https://api.graph.cool/simple/v1/tv-show-track';
+const graphqlEndpoint =
+    process.env.NODE_ENV === 'production'
+      ? 'https://api.graph.cool/simple/v1/tv-show-track-live'
+      : 'https://api.graph.cool/simple/v1/tv-show-track-dev';
 
 function init() {
   ipcMain.on('save-license-key', saveLicenseKey);
 }
 
 async function saveLicenseKey(event, licenseKey) {
+  log.info(`saveLicenseKey: ${licenseKey}`);
   let validLicense = false;
 
   if (!licenseKey) {
     return;
   }
 
-  const licenseIsOk = await checkLicense(licenseKey, true);
+  const licenseIsOk = await checkLicense(licenseKey.replace(' ', ''), true);
 
   if (licenseIsOk) {
     const res = await Database.writeLicense({ key: 'licenseKey', value: licenseKey });
@@ -29,6 +34,8 @@ async function saveLicenseKey(event, licenseKey) {
 }
 
 async function licenseKeyIsValid() {
+  log.info('licenseKeyIsValid...');
+
   try {
     const res = await Database.getLicense({ key: 'licenseKey' });
     if (res && res.value) {
@@ -43,9 +50,12 @@ async function licenseKeyIsValid() {
 }
 
 async function checkLicense(licenseKey, addLicense) {
+  log.info(`checkLicense... addLicense: ${JSON.stringify(licenseKey)}, ${JSON.stringify(addLicense)}`);
   const fingerprint = await getDeviceFingerprint();
+  log.info(`fingerprint: ${JSON.stringify(fingerprint)}`);
 
   const getInvoiceRes = await getInvoice(licenseKey);
+  log.info(`getInvoiceRes: ${JSON.stringify(getInvoiceRes)}`);
 
   if (getInvoiceRes && getInvoiceRes.Invoice && getInvoiceRes.Invoice.id) {
     if (getInvoiceRes.Invoice.fingerprint === fingerprint && getInvoiceRes.Invoice.registered) {
@@ -54,6 +64,7 @@ async function checkLicense(licenseKey, addLicense) {
 
     if (addLicense) {
       const updateInvoiceRes = await updateInvoice(getInvoiceRes.Invoice.id, fingerprint);
+      log.info(`updateInvoiceRes: ${JSON.stringify(updateInvoiceRes)}`);
 
       if (updateInvoiceRes && updateInvoiceRes.updateInvoice) {
         return true;
