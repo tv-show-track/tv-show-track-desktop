@@ -94,10 +94,10 @@ ipcMain.on('online-status-changed', (event, statusIsOnline) => {
  * Methods
  */
 async function checkLicense() {
-  console.log('checkLicense');
+  log.info('checkLicense');
   const webIsHere = await isOnline();
   const validLicense = await licenseKeyIsValid();
-  console.log('validLicense', validLicense);
+  log.info('validLicense', validLicense);
 
   if (!isSandboxed() && webIsHere && !validLicense) {
     isNotAuthorized();
