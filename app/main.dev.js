@@ -20,14 +20,7 @@ import './lib/database';
 import MenuBuilder from './menu';
 import { isSandboxed } from './utils/apple';
 import { init as initLicensing, licenseKeyIsValid } from './lib/licensing';
-import { watchConf } from './lib/listeners/configuration';
-import { init as initScrobbler } from './lib/scrobbler';
-import {
-  isConfigured as isVlcConfigured,
-  listenVlc
-} from './lib/listeners/vlc';
-import { listenChromeCast } from './lib/listeners/chromecast';
-// import { listenAppleTV } from './lib/listeners/apple-tv';
+import { initTracking } from './lib/tracker';
 
 log.transports.file.level = 'info';
 log.transports.console.level = 'info';
@@ -81,11 +74,10 @@ app.on('ready', async () => {
   }
 
   setApplicationMenu();
-
   checkLicense();
 });
 
-ipcMain.on('initialize-tracking', initializeTracking);
+ipcMain.on('initialize-tracking', initTracking);
 ipcMain.on('online-status-changed', (event, statusIsOnline) => {
   global.isOnline = statusIsOnline;
 });
@@ -93,21 +85,25 @@ ipcMain.on('online-status-changed', (event, statusIsOnline) => {
 /**
  * Methods
  */
+
 async function checkLicense() {
-  console.log('checkLicense');
+  log.info('checkLicense');
   const webIsHere = await isOnline();
   const validLicense = await licenseKeyIsValid();
-  console.log('validLicense', validLicense);
+  log.info('validLicense', validLicense);
+  const iosAndSandboxed = process.platform === 'darwin' && isSandboxed()
 
-  if (!isSandboxed() && webIsHere && !validLicense) {
-    isNotAuthorized();
-  } else {
+  if (iosAndSandboxed || (webIsHere && validLicense)) {
     isReady();
+  } else {
+    isNotAuthorized();
   }
 }
 
 function isNotAuthorized() {
+  log.info('isNotAuthorized');
   ipcMain.on('license-added', () => {
+    log.info('license added');
     checkLicense();
   });
   initLicensing();
@@ -121,7 +117,7 @@ function isReady() {
 
   autoUpdater(win);
 
-  initializeTracking();
+  initTracking();
 
   win.loadURL(`file://${__dirname}/app.html`);
 
@@ -141,18 +137,6 @@ function isReady() {
 
   const menuBuilder = new MenuBuilder(win);
   menuBuilder.buildMenu();
-}
-
-async function initializeTracking() {
-  watchConf();
-  initScrobbler();
-
-  const vlcConfigured = await isVlcConfigured();
-  if (vlcConfigured) {
-    listenVlc();
-  }
-
-  listenChromeCast();
 }
 
 function setApplicationMenu() {
@@ -189,6 +173,7 @@ function clicked(e, bounds) {
 
 function showWindow(trayPos) {
   let pos = trayPos;
+
   if (pos && pos.x !== 0) {
     // Cache the bounds
     cachedBounds = pos;
@@ -200,7 +185,11 @@ function showWindow(trayPos) {
     pos = tray.getBounds();
   }
 
-  const position = new Positioner(win).calculate('trayCenter', pos);
+  const centering = process.platform === 'darwin'
+    ? 'trayCenter'
+    : 'trayBottomCenter';
+
+  const position = new Positioner(win).calculate(centering, pos);
 
   const x = position.x;
   const y = position.y;

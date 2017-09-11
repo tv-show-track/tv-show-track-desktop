@@ -4,6 +4,7 @@ import Q from 'q';
 import fs from 'fs';
 import path from 'path';
 import * as _ from 'lodash';
+import log from 'electron-log';
 
 const DATA_PATH = app.getPath('userData');
 const db = {};
@@ -27,7 +28,7 @@ function promisifyDb(obj) {
 }
 
 function dbInit(name) {
-  console.log('dbInit', name, path.join(DATA_PATH, `data/${name}.db`));
+  log.info(`database init: ${path.join(DATA_PATH, `data/${name}.db`)}`);
   db[name] = new Datastore({
     filename: path.join(DATA_PATH, `./data/${name}.db`),
     autoload: true

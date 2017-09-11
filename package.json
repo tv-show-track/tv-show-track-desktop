@@ -50,7 +50,6 @@
       "main.prod.js.map",
       "package.json"
     ],
-    "forceCodeSigning": true,
     "dmg": {
       "contents": [
         {
@@ -82,7 +81,8 @@
     },
     "win": {
       "target": [
-        "nsis"
+        "nsis",
+        "nsis-web"
       ]
     },
     "linux": {
@@ -233,6 +233,7 @@
     "is-online": "^7.0.0",
     "jsonpath": "^0.2.12",
     "lodash": "^4.17.4",
+    "macaddress": "^0.2.8",
     "moment": "^2.18.1",
     "ms": "^2.0.0",
     "mz": "^2.6.0",

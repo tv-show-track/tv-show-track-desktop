@@ -54,6 +54,7 @@ export default class Home extends Component {
   }
 
   onNewVideo(video: any) {
+    console.log('onNewVideo', video);
     this.setState({ video });
   }
 

@@ -4,6 +4,7 @@ import { ipcMain } from 'electron';
 import { request } from 'graphql-request';
 import log from 'electron-log';
 import si from 'systeminformation';
+import macaddress from 'macaddress';
 import Database from './database';
 
 const graphqlEndpoint =
@@ -23,14 +24,14 @@ async function saveLicenseKey(event, licenseKey) {
     return;
   }
 
-  const licenseIsOk = await checkLicense(licenseKey.replace(' ', ''), true);
+  const licenseIsOk = await checkLicense(licenseKey.trim(), true);
+  log.info(`licenseIsOk: ${licenseIsOk}`);
 
   if (licenseIsOk) {
-    const res = await Database.writeLicense({ key: 'licenseKey', value: licenseKey });
-    validLicense = res && res.value;
+    await Database.writeLicense({ key: 'licenseKey', value: licenseKey });
   }
 
-  event.sender.send('license-key-saved', validLicense);
+  event.sender.send('license-key-saved', licenseIsOk);
 }
 
 async function licenseKeyIsValid() {
@@ -45,12 +46,14 @@ async function licenseKeyIsValid() {
 
     return false;
   } catch (e) {
+    log.error(`Database.getLicense error: ${JSON.stringify(e)}`);
     return false;
   }
 }
 
 async function checkLicense(licenseKey, addLicense) {
-  log.info(`checkLicense... addLicense: ${JSON.stringify(licenseKey)}, ${JSON.stringify(addLicense)}`);
+  log.info(`checkLicense...`);
+  log.info(`checkLicense params: ${JSON.stringify(licenseKey)}, ${JSON.stringify(addLicense)}`);
   const fingerprint = await getDeviceFingerprint();
   log.info(`fingerprint: ${JSON.stringify(fingerprint)}`);
 
@@ -105,17 +108,31 @@ async function updateInvoice(id, fingerprint) {
   return request(graphqlEndpoint, query);
 }
 
+function getMacAddress() {
+  return new Promise((resolve, reject) => {
+    macaddress.one((err, mac) => {
+      if (mac) {
+        resolve(mac)
+      } else {
+        reject(err)
+      }
+    });
+  });
+}
+
 async function getDeviceFingerprint() {
+  log.info('getDeviceFingerprint...');
   const cpuData = await si.cpu();
+  log.info(`cpuData: ${JSON.stringify(cpuData)}`);
   const cpuStrg = cpuData.brand + cpuData.family + cpuData.model +
     cpuData.speedmax + cpuData.cores;
 
-  const nisData = await si.networkInterfaces();
-  const niData = _.find(nisData, { iface: 'en0' });
-  const niStrg = niData.mac;
+  const niStrg = await getMacAddress()
+  log.info(`mac address: ${JSON.stringify(niStrg)}`);
 
   const timeData = await si.time();
   const timeStrg = timeData.timezoneName;
+  log.info(`cpuData: ${JSON.stringify(timeData)}`);
 
   const fingerprint = sha1(cpuStrg + niStrg + timeStrg);
 

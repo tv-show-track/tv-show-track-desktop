@@ -6,6 +6,7 @@ import { spawn } from 'child_process'
 
 import * as _ from 'lodash';
 import { ipcMain } from 'electron';
+import vlcCommand from 'vlc-command';
 
 import Database from '../database';
 import { play, stop } from '../scrobbler';
@@ -18,6 +19,7 @@ const config = {
 };
 
 let cancelIntervalInfos;
+let cantReadInfos = false;
 
 ipcMain.on('is-vlc-installed', async (event) => {
   const res = await Database.getSetting({ key: 'vlcInstalled' });
@@ -58,7 +60,7 @@ ipcMain.on('check-vlc', async (event) => {
   if (vlcInstalled) {
     configureVlc()
       .then(() => {
-        listenVlc();
+        trackVlc();
         event.sender.send('vlc-checked', {
           installed: true,
           configured: true
@@ -93,45 +95,27 @@ async function isConfigured() {
   return res && res.value;
 }
 
-function listenVlc() {
+function trackVlc() {
   if (cancelIntervalInfos) {
     clearInterval(cancelIntervalInfos);
   }
   cancelIntervalInfos = setInterval(getMediaInfos, 1000);
 }
 
-function checkIfInstalled() {
-  return new Promise((resolve) => {
-    const sp = spawn('system_profiler', ['-xml', 'SPApplicationsDataType']);
+function untrackVlc() {
+  if (cancelIntervalInfos) {
+    clearInterval(cancelIntervalInfos);
+  }
+}
 
-    let profile = '';
 
-    sp.stdout.setEncoding('utf8');
-    sp.stdout.on('data', data => {
-      profile += data;
-    });
 
-    sp.stderr.on('data', data => {
-      console.log(`stderr: ${data}`);
-    });
-
-    sp.on('close', code => {
-      console.log(`child process exited with code ${code}`);
-    });
-
-    sp.stdout.on('end', () => {
-      xml2js.parseString(profile, (err, result) => {
-        const vlcSearch = _.get(result, 'plist.array[0].dict[0].array[1].dict');
-        if (vlcSearch) {
-          for (let i = 0; i < vlcSearch.length; i += 1) {
-            if (_.get(vlcSearch[i], 'string[0]') === 'VLC') {
-              resolve(true);
-              break;
-            }
-          }
-        }
-        resolve(false);
-      });
+function checkIfInstalled () {
+  console.log('checkIfInstalled');
+  return new Promise(resolve => {
+    vlcCommand((err, vlcPath) => {
+      console.log('vlcCommand err', err, vlcPath);
+      resolve(!err);
     });
   });
 }
@@ -201,6 +185,7 @@ async function getMediaInfos() {
   try {
     const response = await axios.get(vlcServerURL, config);
     if (response && response.data) {
+      cantReadInfos = false;
       xml2js.parseString(response.data, async (err, result) => {
         const infos = _.get(result, 'root.information[0].category[0].info');
         const filenameFinder = _.find(infos, n => n.$.name === 'filename');
@@ -216,8 +201,13 @@ async function getMediaInfos() {
       });
     }
   } catch (err) {
+    if (!cantReadInfos) {
+      stop('vlc');
+      cantReadInfos = true;
+    }
+
     console.log('Error reading vlc infos', err.code);
   }
 }
 
-export { configureVlc, isConfigured, listenVlc };
+export { configureVlc, isConfigured, trackVlc };

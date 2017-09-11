@@ -3,17 +3,27 @@ import scanner from 'chromecast-scanner';
 import _ from 'lodash';
 import { play, stop } from '../scrobbler';
 
-function listenChromeCast() {
+let pollInterval;
+let tracking = false;
+
+function track() {
+  tracking = true;
   scanner((err, service) => {
-    if (service && service.data) {
+    if (service && service.data && tracking) {
       onDeviceUp(service.data);
     }
   });
 }
 
+function untrack() {
+  tracking = false;
+  if (pollInterval) {
+    clearInterval(pollInterval);
+  }
+}
+
 function onDeviceUp(host) {
   const client = new Client();
-  let pollInterval;
 
   try {
     client.on('error', err => {
@@ -21,7 +31,7 @@ function onDeviceUp(host) {
       if (pollInterval) {
         clearInterval(pollInterval);
       }
-      listenChromeCast();
+      track();
     });
     client.connect(host, () => {
       pollInterval = setInterval(() => {
@@ -71,4 +81,7 @@ function getMediaInfos(client) {
   }
 }
 
-export { listenChromeCast };
+export {
+  track as trackChromeCast,
+  untrack as untrackChromeCast
+};

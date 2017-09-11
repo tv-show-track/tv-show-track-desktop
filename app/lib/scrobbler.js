@@ -38,6 +38,8 @@ async function play(status) {
 
   currentProvider = provider;
 
+  console.log('play', status);
+
   if (title) {
     if (watchProgressionEvent && position) {
       watchProgressionEvent.sender.send('progression', { pc: position * 100 });
@@ -46,6 +48,7 @@ async function play(status) {
     if (currentTitle !== title) {
       currentTitle = title;
       const video = await matchTraktVideo(title, position);
+      console.log('video', video);
 
       if (video && video.show) {
         let images;
@@ -63,6 +66,7 @@ async function play(status) {
         }
 
         currentMedia = { ...video, images, source: 'vlc' };
+        console.log('currentMedia', currentMedia);
         if (watchNewVideoEvent) {
           watchNewVideoEvent.sender.send('new-current-video', currentMedia);
         }

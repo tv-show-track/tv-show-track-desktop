@@ -81,9 +81,23 @@ export default class Config extends Component {
   selectVlcConfigFile() {
     getUsername().then(username => {
       const { dialog } = remote;
+      let defaultPath;
+
+      switch (process.platform) {
+        case 'darwin':
+          defaultPath =  `/Users/${username}/Library/Preferences/org.videolan.vlc`;
+          break;
+        case 'win32':
+        default:
+          defaultPath =  `C:\\Documents and Settings\\${username}\\Application Data\\vlc`;
+          break;
+      }
+
+      console.log('defaultPath', defaultPath);
+
       return dialog.showOpenDialog({
         buttonLabel: 'Select VLC config file',
-        defaultPath: `/Users/${username}/Library/Preferences/org.videolan.vlc`,
+        defaultPath,
         properties: ['openFile']
       }, path => {
         if (path && path.length) {

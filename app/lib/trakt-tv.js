@@ -5,7 +5,7 @@ import TraktImages from 'trakt.tv-images';
 import _ from 'lodash';
 
 import { syncWatchedEpisodes } from './listeners';
-import { listenVlc } from './listeners/vlc';
+import { trackVlc } from './listeners/vlc';
 import Database from './database';
 import { setAsConfigured } from './listeners/configuration';
 
@@ -66,7 +66,7 @@ async function connectTrakt(event) {
     const errMsg = 'Trakt.tv api is actually unreachable or encounter an issue so please retry later.';
     event.sender.send('connect-trakt-error', errMsg);
   }
-  listenVlc();
+  trackVlc();
 }
 
 async function disconnectTrakt(event) {
