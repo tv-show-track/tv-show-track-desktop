@@ -91,6 +91,7 @@ async function checkLicense() {
   const webIsHere = await isOnline();
   const validLicense = await licenseKeyIsValid();
   log.info('validLicense', validLicense);
+
   const iosAndSandboxed = process.platform === 'darwin' && isSandboxed()
 
   if (iosAndSandboxed || (webIsHere && validLicense)) {
