@@ -80,6 +80,7 @@
       "entitlementsInherit": "build/entitlements.mas.inherit.plist"
     },
     "win": {
+      "icon": "resources/icon.ico",
       "target": [
         "nsis",
         "nsis-web"
