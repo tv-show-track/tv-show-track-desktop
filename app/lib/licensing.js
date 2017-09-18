@@ -1,5 +1,4 @@
 import sha1 from 'sha1';
-import * as _ from 'lodash';
 import { ipcMain } from 'electron';
 import { request } from 'graphql-request';
 import log from 'electron-log';
@@ -18,9 +17,9 @@ function init() {
 
 async function saveLicenseKey(event, licenseKey) {
   log.info(`saveLicenseKey: ${licenseKey}`);
-  let validLicense = false;
 
   if (!licenseKey) {
+    event.sender.send('license-key-error', 'Please enter a license key');
     return;
   }
 
@@ -29,9 +28,10 @@ async function saveLicenseKey(event, licenseKey) {
 
   if (licenseIsOk) {
     await Database.writeLicense({ key: 'licenseKey', value: licenseKey });
+    event.sender.send('license-key-saved', licenseIsOk);
+  } else {
+    event.sender.send('license-key-error', 'License key not valid');
   }
-
-  event.sender.send('license-key-saved', licenseIsOk);
 }
 
 async function licenseKeyIsValid() {
@@ -52,8 +52,7 @@ async function licenseKeyIsValid() {
 }
 
 async function checkLicense(licenseKey, addLicense) {
-  log.info(`checkLicense...`);
-  log.info(`checkLicense params: ${JSON.stringify(licenseKey)}, ${JSON.stringify(addLicense)}`);
+  log.info(`checkLicense: ${JSON.stringify(licenseKey)}, ${JSON.stringify(addLicense)}`);
   const fingerprint = await getDeviceFingerprint();
   log.info(`fingerprint: ${JSON.stringify(fingerprint)}`);
 
@@ -112,9 +111,9 @@ function getMacAddress() {
   return new Promise((resolve, reject) => {
     macaddress.one((err, mac) => {
       if (mac) {
-        resolve(mac)
+        resolve(mac);
       } else {
-        reject(err)
+        reject(err);
       }
     });
   });
@@ -127,7 +126,7 @@ async function getDeviceFingerprint() {
   const cpuStrg = cpuData.brand + cpuData.family + cpuData.model +
     cpuData.speedmax + cpuData.cores;
 
-  const niStrg = await getMacAddress()
+  const niStrg = await getMacAddress();
   log.info(`mac address: ${JSON.stringify(niStrg)}`);
 
   const timeData = await si.time();

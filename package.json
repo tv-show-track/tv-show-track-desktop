@@ -262,6 +262,7 @@
     "trakt.tv-matcher": "^5.0.0",
     "trim": "^0.0.1",
     "username": "^3.0.0",
+    "vlc-command": "^1.1.1",
     "xml2js": "^0.4.19"
   },
   "devEngines": {

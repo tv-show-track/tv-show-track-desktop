@@ -21,6 +21,7 @@
         ></input>
       </label>
     </div>
+    <div id="error" class="error"></div>
     <button id="addLicense">Validate License</button>
     <p>You can buy one here: <br /><a href="" id="openStore">https://tv-show-track.com/store</a></p>
     <script>
@@ -28,14 +29,23 @@
       const licenseElem = document.querySelector('#licenseKey')
       const addLicenseButton = document.querySelector('#addLicense')
       const openStoreLink = document.querySelector('#openStore')
+      const errorElem = document.querySelector('#error')
 
       addLicenseButton.addEventListener('click', () => {
+        addLicenseButton.disabled = true
         ipcRenderer.on('license-key-saved', (event, arg) => {
           if (arg) {
             licenseElem.disabled = true
-            addLicenseButton.disabled = true
             addLicenseButton.innerHTML = 'License valid and saved!'
             ipcRenderer.send('license-added')
+          } else {
+            addLicenseButton.disabled = false
+          }
+        })
+        ipcRenderer.on('license-key-error', (event, arg) => {
+          addLicenseButton.disabled = false
+          if (arg) {
+            errorElem.innerHTML = arg
           }
         })
         ipcRenderer.send('save-license-key', licenseElem.value)
