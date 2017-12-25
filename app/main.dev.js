@@ -74,7 +74,8 @@ app.on('ready', async () => {
   }
 
   setApplicationMenu();
-  checkLicense();
+  // checkLicense();
+  isReady();
 });
 
 ipcMain.on('initialize-tracking', initTracking);
