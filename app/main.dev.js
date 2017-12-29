@@ -14,13 +14,9 @@ import path from 'path';
 import { app, BrowserWindow, Tray, nativeImage, ipcMain } from 'electron';
 import log from 'electron-log';
 import Positioner from 'electron-positioner';
-import isOnline from 'is-online';
 import autoUpdater from './utils/updates';
 import './lib/database';
 import MenuBuilder from './menu';
-import { isSandboxed } from './utils/apple';
-import { init as initLicensing, licenseKeyIsValid } from './lib/licensing';
-import { initTracking } from './lib/tracker';
 
 log.transports.file.level = 'info';
 log.transports.console.level = 'info';
@@ -74,52 +70,22 @@ app.on('ready', async () => {
   }
 
   setApplicationMenu();
-  // checkLicense();
-  isReady();
-});
 
-ipcMain.on('initialize-tracking', initTracking);
-ipcMain.on('online-status-changed', (event, statusIsOnline) => {
-  global.isOnline = statusIsOnline;
+  autoUpdater(win);
+
+  isReady();
 });
 
 /**
  * Methods
  */
 
-async function checkLicense() {
-  log.info('checkLicense');
-  const webIsHere = await isOnline();
-  const validLicense = await licenseKeyIsValid();
-  log.info('validLicense', validLicense);
-
-  const iosAndSandboxed = process.platform === 'darwin' && isSandboxed();
-
-  if (iosAndSandboxed || (webIsHere && validLicense)) {
-    isReady();
-  } else {
-    isNotAuthorized();
-  }
-}
-
-function isNotAuthorized() {
-  log.info('isNotAuthorized');
-  ipcMain.on('license-added', () => {
-    log.info('license added');
-    checkLicense();
-  });
-  initLicensing();
-  win.loadURL(`file://${__dirname}/not-authorized.html`);
-  const menuBuilder = new MenuBuilder(win);
-  menuBuilder.buildMenu();
-}
-
 function isReady() {
   log.info('isReady');
 
-  autoUpdater(win);
-
+  const initTracking = require('./lib/tracker');
   initTracking();
+  ipcMain.on('initialize-tracking', initTracking);
 
   win.loadURL(`file://${__dirname}/app.html`);
 

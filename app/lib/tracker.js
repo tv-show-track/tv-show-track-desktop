@@ -10,7 +10,7 @@ import { trackChromeCast, untrackChromeCast } from './listeners/chromecast';
 
 const mediaPlayers = [];
 
-async function init() {
+export default async function () {
   watchConf();
   initScrobbler();
 
@@ -32,10 +32,4 @@ async function init() {
   for (const mediaPlayer of mediaPlayers) {
     mediaPlayer.track();
   }
-}
-
-
-
-export {
-  init as initTracking
 }
