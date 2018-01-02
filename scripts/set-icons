@@ -1,0 +1,5 @@
+sed -i -- 's/terminal-notifier/genius-notifier/g' vendor/terminal-notifier.app/Contents/Info.plist
+sed -i -- 's/Terminal/Genius/g' vendor/terminal-notifier.app/Contents/Info.plist  # replace icon
+rm vendor/terminal-notifier.app/Contents/Resources/Terminal.icns  # remove the original icon
+rm vendor/terminal-notifier.app/Contents/Resources/Genius.icns
+cp resources/icon.icns vendor/terminal-notifier.app/Contents/Resources/Genius.icns  # replaced by our own icon
