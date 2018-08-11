@@ -95,7 +95,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tv-show-track/tv-show-track.git"
+    "url": "git+https://github.com/tv-show-track/tv-show-track-desktop.git"
   },
   "author": {
     "name": "Matthieu Hostache",
